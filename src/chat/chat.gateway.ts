@@ -11,7 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 
 // @WebSocketGateway({ cors: { origin: '*' } })
-// 👆 중요: cors 설정을 해줘야 나중에 프론트엔드에서 접속 막히는 걸 방지해.
+// cors 설정을 해줘야 나중에 프론트엔드에서 접속 막히는 걸 방지
 @WebSocketGateway({ cors: { origin: '*' }, namespace: 'chat' })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
