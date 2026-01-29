@@ -13,24 +13,20 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>, // DataSource 대신 이거 씀
 
-    // 생성용 (create) - Raw Query 유지용 DataSource 사용
+    // create - Raw Query 유지용 DataSource 사용
     private dataSource: DataSource,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
     const { email, password, nickname } = createUserDto;
-    console.log('1. 서비스 진입 완료'); // 로그 추가
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('2. 비밀번호 해싱 완료'); // 로그 추가
 
     try {
-      console.log('3. DB 쿼리 실행 직전...');
       const result = (await this.dataSource.query(
         `INSERT INTO users (email, password, nickname) VALUES (?, ?, ?)`,
         [email, hashedPassword, nickname],
       )) as unknown;
-      console.log('4. DB 쿼리 완료:', result);
       return { success: true, message: '회원가입 성공' };
     } catch (error) {
       const dbError = error as { code: string };
@@ -61,7 +57,7 @@ export class UsersService {
   // }
 
   async findByEmail(email: string): Promise<User | null> {
-    // 실제 DB 조회: "email 컬럼이 이 파라미터랑 같은 놈 하나 찾아줘"
+    // 실제 DB 조회
     return this.usersRepository.findOne({ where: { email } });
   }
 
