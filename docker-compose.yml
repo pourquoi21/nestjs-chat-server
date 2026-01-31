@@ -1,13 +1,41 @@
 services:
   db:
     image: mysql:8.0
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake # 클라이언트설정 무시하고 서버설정 따르게
     container_name: grid-talk-db
     restart: always
     environment:
       MYSQL_DATABASE: grid_talk
       MYSQL_ROOT_PASSWORD: user123
+      TZ: Asia/Seoul
     ports:
       - '3307:3306'
     volumes:
       - ./mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:7.4.2-alpine
+    container_name: grid-talk-redis
+    ports:
+      - '6379:6379'
+    command: ["redis-server"] # 일단 비번 없이 시작
+    volumes:
+      - redis_volume_data:/data
+
+  redisinsight:
+    image: redis/redisinsight:latest
+    container_name: grid-talk-redisinsight
+    ports:
+      - '5540:5540'
+    depends_on:
+      - redis
+    volumes:
+      - redis_insight_volume_data:/db
+
+volumes:
+  redis_volume_data:
+  redis_insight_volume_data:
