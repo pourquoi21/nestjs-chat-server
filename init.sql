@@ -1,6 +1,9 @@
 -- 1. 데이터베이스 생성 및 선택
 CREATE DATABASE IF NOT EXISTS grid_talk;
+SET NAMES utf8mb4;
 USE grid_talk;
+
+ALTER DATABASE grid_talk CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- 2. 사용자 (User) 테이블
 -- 보안도 중요하므로 password는 해시값(암호화)으로 저장한다고 가정
@@ -50,6 +53,5 @@ CREATE TABLE IF NOT EXISTS chat_room_members (
 -- [테스트용 더미 데이터] --
 -- 개발 편의를 위해 서버 뜰 때마다 넣어두면 편함 (비번은 '1234'라고 가정)
 INSERT IGNORE INTO users (email, password, nickname) VALUES
-                                                         ('test1@school.com', '1234', '김철수'),
-                                                         ('test2@school.com', '1234', '이영희'),
-                                                         ('test3@school.com', '1234', '박선생님');
+                                                         ('postman1@test.com', '$2b$10$zjjlj66KJGKkrNO.r167yu8v9ohTmJBT98h1zBmCs4.KGhkzlDhAS', '포스트맨1'),
+                                                         ('postman2@test.com', '$2b$10$8vjV/bseHNUWusB6Wa785e4/xQW8W6e8fI3Xb5XqNbekluQtd6.TS', '포스트맨2');
