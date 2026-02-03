@@ -55,3 +55,7 @@ CREATE TABLE IF NOT EXISTS chat_room_members (
 INSERT IGNORE INTO users (email, password, nickname) VALUES
                                                          ('postman1@test.com', '$2b$10$zjjlj66KJGKkrNO.r167yu8v9ohTmJBT98h1zBmCs4.KGhkzlDhAS', '포스트맨1'),
                                                          ('postman2@test.com', '$2b$10$8vjV/bseHNUWusB6Wa785e4/xQW8W6e8fI3Xb5XqNbekluQtd6.TS', '포스트맨2');
+
+INSERT IGNORE INTO chat_rooms (id, title, created_at) VALUES (1, '테스트방', NOW());
+
+INSERT IGNORE INTO chat_room_members (id, room_id, user_id) VALUES (1, 1, 1);

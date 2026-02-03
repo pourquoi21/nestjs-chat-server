@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>Chat Debug Client</title>
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <style>
+      /* 스타일 좀 더 깔끔하게 */
+      body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background: #f0f2f5; }
+      .container { display: flex; gap: 20px; }
+      .control-panel { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+      .log-panel { flex: 2; background: #1e1e1e; color: #00ff00; padding: 20px; border-radius: 8px; height: 500px; overflow-y: auto; font-family: monospace; }
+      input, button { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+      button { background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+      button:hover { background: #0056b3; }
+      button.disconnect { background: #dc3545; }
+      .status { margin-bottom: 10px; font-weight: bold; color: #dc3545; }
+      .status.connected { color: #28a745; }
+  </style>
+</head>
+<body>
+<h1>🚀 NestJS 채팅 디버거</h1>
+
+<div class="container">
+  <div class="control-panel">
+    <div id="status" class="status">🔴 연결 끊김</div>
+
+    <h3>1. 인증 (JWT)</h3>
+    <input type="text" id="token" placeholder="Bearer Token 입력 (ey...)" />
+    <button onclick="connectSocket()">소켓 연결 (Connect)</button>
+    <button class="disconnect" onclick="disconnectSocket()">연결 끊기</button>
+
+    <hr>
+
+    <h3>2. 방 입장</h3>
+    <input type="number" id="roomId" value="1" placeholder="방 번호" />
+    <button onclick="joinRoom()">방 입장 (Join)</button>
+
+    <hr>
+
+    <h3>3. 메시지 전송</h3>
+    <input type="text" id="msgInput" placeholder="메시지 입력..." onkeypress="if(event.keyCode==13) sendMessage()" />
+    <button onclick="sendMessage()">전송 (Send)</button>
+  </div>
+
+  <div class="log-panel" id="logs">
+    <div>[System] 대기 중...</div>
+  </div>
+</div>
+
+<script>
+  let socket = null;
+
+  // 화면에 로그 찍는 함수
+  function log(type, msg) {
+    const logBox = document.getElementById('logs');
+    const p = document.createElement('div');
+    const time = new Date().toLocaleTimeString();
+
+    let color = 'white';
+    if (type === 'SEND') color = '#f1c40f'; // 노랑
+    if (type === 'RECV') color = '#3498db'; // 파랑
+    if (type === 'ERR') color = '#e74c3c';  // 빨강
+
+    p.style.color = color;
+    p.textContent = `[${time}] [${type}] ${msg}`;
+    logBox.appendChild(p);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+
+  function updateStatus(isConnected) {
+    const el = document.getElementById('status');
+    el.textContent = isConnected ? '🟢 서버 연결됨' : '🔴 연결 끊김';
+    el.className = isConnected ? 'status connected' : 'status';
+  }
+
+  // 1. 소켓 연결
+  function connectSocket() {
+    const token = document.getElementById('token').value.trim();
+    if (!token) return alert('토큰을 먼저 입력해주세요!');
+
+    if (socket) {
+      socket.disconnect();
+    }
+
+    log('System', '서버 연결 시도 중...');
+
+    // 소켓 초기화
+    socket = io('http://localhost:3000/chat', {
+      transports: ['websocket'], // 폴링 방지 (즉시 웹소켓)
+      auth: {
+        token: `Bearer ${token}`
+      },
+      // 만약 Gateway에서 헤더로 검사하면 아래 주석 해제
+      // extraHeaders: { Authorization: `Bearer ${token}` }
+    });
+
+    // 연결 성공 이벤트
+    socket.on('connect', () => {
+      updateStatus(true);
+      log('System', `✅ 연결 성공! (Socket ID: ${socket.id})`);
+    });
+
+    // 연결 끊김
+    socket.on('disconnect', (reason) => {
+      updateStatus(false);
+      log('ERR', `❌ 연결 끊김 (${reason})`);
+    });
+
+    // 에러 발생 (인증 실패 등)
+    socket.on('connect_error', (error) => {
+      updateStatus(false);
+      log('ERR', `🔥 연결 에러: ${error.message}`);
+      alert('연결 실패! 토큰을 확인하거나 서버 로그를 보세요.');
+    });
+
+    // ★ 메시지 수신 (서버가 emit('message') 한 것)
+    socket.on('message', (data) => {
+      console.log('받은 데이터:', data); // F12 콘솔에서도 확인
+      log('RECV', `[User ${data.user}] ${data.message} (${data.time})`);
+    });
+
+    // 공지사항 수신 (join 성공 등)
+    socket.on('notice', (msg) => {
+      log('RECV', `📢 공지: ${msg}`);
+    });
+  }
+
+  function disconnectSocket() {
+    if (socket) {
+      socket.disconnect();
+      log('System', '사용자가 연결을 끊었습니다.');
+    }
+  }
+
+  // 2. 방 입장
+  function joinRoom() {
+    if (!socket || !socket.connected) return alert('먼저 소켓 연결을 해주세요!');
+    const roomId = document.getElementById('roomId').value;
+
+    socket.emit('join_room', parseInt(roomId)); // 서버 이벤트명 확인 필요
+    log('SEND', `🚪 ${roomId}번 방 입장 요청 보냄`);
+  }
+
+  // 3. 메시지 전송
+  function sendMessage() {
+    if (!socket || !socket.connected) return alert('먼저 소켓 연결을 해주세요!');
+
+    const roomId = document.getElementById('roomId').value;
+    const msg = document.getElementById('msgInput').value;
+
+    if(!msg) return;
+
+    // 서버 이벤트명 'message' 확인 필요
+    socket.emit('message', { room: parseInt(roomId), msg: msg });
+    log('SEND', `📤 메시지 전송: ${msg}`);
+
+    document.getElementById('msgInput').value = ''; // 입력창 비우기
+  }
+</script>
+</body>
+</html>
