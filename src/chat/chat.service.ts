@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
@@ -7,7 +7,6 @@ import { User } from '../users/entities/user.entity';
 import { ChatRoom } from './entities/chat-room-entity';
 import { ChatRoomMember } from './entities/chat-room-member.entity';
 import { ActiveUser } from '../auth/interfaces/active-user.interface';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class ChatService {
@@ -20,26 +19,67 @@ export class ChatService {
     @InjectRepository(ChatRoomMember)
     private chatRoomMemberRepository: Repository<ChatRoomMember>,
     @InjectRepository(ChatRoom)
-    private chatRoom: Repository<ChatRoom>,
+    private chatRoomRepository: Repository<ChatRoom>,
   ) {}
 
   // 메시지 저장하기
   async saveMessage(room_id: number, sender_id: number, content: string) {
-    const newMessage = this.chatRepository.create({
-      room_id,
-      sender_id,
-      content,
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 메시지 객체'만' 생성
+      const newMessage = this.chatRepository.create({
+        room_id,
+        sender_id,
+        content,
+      });
+
+      // 메시지 저장
+      // queryRunner로 하나로 묶어줌
+      const savedMessage = await queryRunner.manager.save(
+        ChatMessage,
+        newMessage,
+      );
+
+      await queryRunner.manager.update(ChatRoom, room_id, {
+        last_message: content,
+        last_message_at: savedMessage.created_at,
+      });
+
+      await queryRunner.commitTransaction();
+
+      return savedMessage;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      queryRunner.release();
+    }
+  }
+
+  // 유저가 속한 방을 불러오기
+  async getMyRooms(userId: number): Promise<ChatRoom[]> {
+    const memberships = await this.chatRoomMemberRepository.find({
+      where: { user_id: userId },
+      relations: ['room'],
+      order: { joined_at: 'DESC' },
     });
-    return await this.chatRepository.save(newMessage);
+
+    return memberships.map((membership) => membership.room);
   }
 
   // 과거 메시지 불러오기 (최신순 50개)
   async getMessagesByRoom(roomId: number): Promise<ChatMessage[]> {
-    return await this.chatRepository.find({
+    const messages = await this.chatRepository.find({
       where: { room_id: roomId },
-      order: { created_at: 'ASC' }, // 오래된 순서대로
+      order: { created_at: 'DESC' }, // 최근것이 잘 보이게
       take: 50,
     });
+
+    // 프론트에서 읽기 편하게 뒤집어주기
+    return messages.reverse();
   }
 
   // (누군가를 초대한) 방 만들기
@@ -105,9 +145,10 @@ export class ChatService {
     }
   }
 
-  // 방에 들어가기
-  async joinRoom(roomId: number, userId: number) {
-    const room = await this.chatRoom.findOneBy({ id: roomId });
+  // [HTTP용] 방에 들어가면 DB에 멤버로 insert하는 메서드
+  // controller에서 호출
+  async joinRoomMember(roomId: number, userId: number) {
+    const room = await this.chatRoomRepository.findOneBy({ id: roomId });
     if (!room) throw new NotFoundException('방이 존재하지 않습니다.');
 
     const existingMember = await this.chatRoomMemberRepository.findOne({
@@ -122,6 +163,15 @@ export class ChatService {
       await this.chatRoomMemberRepository.save(newMember);
       console.log(`[DB 저장됨] 유저 ${userId}가 방 ${roomId}의 멤버가 됨`);
     }
+  }
+
+  // [Socket용] 멤버인지 DB상에서 select하여 확인만 함
+  // gateway에서 호출
+  async isRoomMember(roomId: number, userId: number): Promise<boolean> {
+    const member = await this.chatRoomMemberRepository.findOne({
+      where: { room_id: roomId, user_id: userId },
+    });
+    return !!member;
   }
 
   // 방에서 나가기

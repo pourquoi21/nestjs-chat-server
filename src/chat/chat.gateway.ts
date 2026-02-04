@@ -11,6 +11,7 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
+import { ParseIntPipe } from '@nestjs/common';
 
 interface AuthenticatedSocket extends Socket {
   data: {
@@ -77,33 +78,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`[종료됨] 클라이언트 ID: ${client.id}`);
   }
 
+  // 방에 들어가기
   @SubscribeMessage('join_room')
   async handleJoinRoom(
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() room: number, // 방 번호
+    @MessageBody(ParseIntPipe) room: number, // 방 번호
   ) {
     const user = client.data.user;
     if (!user) return;
 
-    // DB 작업
     try {
-      await this.chatService.joinRoom(room, user.sub);
-    } catch (error) {
+      // 이미 멤버인지만 확인
+      const isMember = await this.chatService.isRoomMember(room, user.sub);
+
+      if (!isMember) {
+        // client.emit('exception', '먼저 방에 참여해야 합니다.');
+        return { status: 'error', message: '먼저 방에 참여해야 합니다.' };
+      }
+
+      // 통과했다면 socket 작업
+      client.join(`${room}`);
       console.log(
-        `DB 멤버 추가 중: `,
-        error instanceof Error ? error.message : error,
+        `[입장] ${client.data.user?.email} 님이 ${room}번방 소켓에 연결됨`,
       );
+
+      client.to(`${room}`).emit('notice', `${user.email}님이 입장하셨습니다`);
+      return {
+        status: 'success',
+        message: `${room}번 방에 입장 완료`,
+        data: { room, user: user.email },
+      };
+    } catch (e) {
+      console.error('Join Room Error: ', e);
+      return { status: 'error', message: '서버 내부 오류 발생' };
     }
-
-    // socket 작업
-    client.join(`${room}`);
-    console.log(
-      `[입장] ${client.data.user?.email} 님이 ${room}번방 소켓에 연결됨`,
-    );
-
-    client.to(`${room}`).emit('notice', `${user.email}님이 입장하셨습니다`);
-
-    return `${room}번 방에 입장 완료`;
   }
 
   // 방으로 입장해서 메시지 보내기
@@ -111,30 +119,39 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleMessage(
     // @MessageBody() data: string,
     @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody() data: { room: number; msg: string },
+    @MessageBody() data: { room: any; msg: string },
   ) {
-    const { room, msg } = data;
+    const { msg } = data;
+    const room = parseInt(String(data.room), 10);
     const userEmail = client.data.user?.email;
     const user = client.data.user;
 
-    if (user) {
+    if (!user || !room) return;
+
+    try {
+      const isMember = await this.chatService.isRoomMember(room, user.sub);
+
+      if (!isMember) {
+        client.emit(
+          'exception',
+          '해당 방의 멤버가 아니므로 메시지를 보낼 수 없습니다.',
+        );
+        return { status: 'error', message: '해당 방의 멤버가 아닙니다.' };
+      }
       // DB에 저장 (비동기)
       await this.chatService.saveMessage(room, user.sub, msg);
+
+      // 해당 방에 방송
+      this.server.to(`${room}`).emit('message', {
+        user: userEmail,
+        message: msg,
+        time: new Date(),
+      });
+    } catch (error) {
+      console.error('메시지 전송 중 에러: ', error);
+      client.emit('exception', '메시지 전송 실패');
+      return { status: 'error', message: '서버 내부 오류 발생' };
     }
-
-    console.log(`[메시지] ${room}번방 - ${userEmail}:  ${msg}`);
-
-    // 서버가 다시 답장 보내기 (emit)
-    // client.emit('message', `Received: ${data}`); // 1:1 답장
-    // 전체 방송
-    // this.server.emit('message', `[전체공지] ${client.id}님이 말함: ${data}`); // 전체 방송
-
-    // 특정 방에 방송
-    this.server.to(`${room}`).emit('message', {
-      user: userEmail,
-      message: msg,
-      time: new Date(),
-    });
   }
 
   // 방 나가기
