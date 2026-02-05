@@ -4,19 +4,20 @@ import { ValidationPipe } from '@nestjs/common';
 import * as express from 'express';
 import { RedisIoAdapter } from './chat/redis-io.adapter';
 import { Request, Response, NextFunction } from 'express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // CORS 설정
+  // NOTE: chatGateway에 한 것은 socket에 설정한것
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    console.log('--- [미들웨어 로그 시작] ---');
-    console.log(`1. 요청 주소: ${req.method} ${req.url}`);
-    console.log(`2. 헤더 확인: ${req.headers['content-type']}`);
-    console.log('3. Body 확인:', req.body);
-    console.log('--- [미들웨어 로그 끝] ---');
-    next();
-  });
 
   // Spring의 @Valid 어노테이션 활성화 역할
   app.useGlobalPipes(
@@ -27,9 +28,21 @@ async function bootstrap() {
     }),
   );
 
+  app.useGlobalFilters(new HttpExceptionFilter());
+
   const redisIoAdapter = new RedisIoAdapter(app);
   await redisIoAdapter.connectToRedis();
   app.useWebSocketAdapter(redisIoAdapter);
+
+  // swagger설정
+  const config = new DocumentBuilder()
+    .setTitle('Real-time Chat API')
+    .setDescription('NestJS + Socket.IO 채팅 서버 API 문서')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
 
   await app.listen(3000);
   console.log('---서버 3000 에서 시작---');

@@ -4,7 +4,11 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
-      - --skip-character-set-client-handshake # 클라이언트설정 무시하고 서버설정 따르게
+      # 클라이언트설정 무시하고 서버설정 따르게: 한글깨짐 방지
+      - --skip-character-set-client-handshake
+      # timezone
+      - --default-authentication-plugin=mysql_native_password
+      - --default-time-zone=+09:00
     container_name: grid-talk-db
     restart: always
     environment:
