@@ -75,7 +75,7 @@ export class ChatController {
   async getRoomMessages(
     @Param('roomId', ParseIntPipe) roomId: number,
   ): Promise<ChatMessage[]> {
-    return await this.chatService.getMessagesByRoom(roomId);
+    return await this.chatService.getMessages(roomId);
   }
 
   @Get('rooms')

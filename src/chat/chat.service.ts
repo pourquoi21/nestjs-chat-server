@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, LessThan, Repository } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { User } from '../users/entities/user.entity';
@@ -71,11 +71,32 @@ export class ChatService {
   }
 
   // 과거 메시지 불러오기 (최신순 50개)
-  async getMessagesByRoom(roomId: number): Promise<ChatMessage[]> {
+  async getMessages(roomId: number, cursor?: number): Promise<ChatMessage[]> {
+    // async getMessages(roomId: number): Promise<ChatMessage[]> {
+    // OFFSET기반의 방법
+    // const messages = await this.chatRepository.find({
+    //   where: { room_id: roomId },
+    //   order: { created_at: 'DESC' }, // 최근것이 잘 보이게
+    //   take: 50,
+    // });
+
+    const take = 50; // 한번에 가져올 개수
+
+    const whereCondition: any = {
+      room_id: roomId,
+    };
+
+    if (cursor) {
+      // cursor: 마지막으로 본 메시지 ID
+      whereCondition.id = LessThan(cursor);
+    }
+
     const messages = await this.chatRepository.find({
-      where: { room_id: roomId },
-      order: { created_at: 'DESC' }, // 최근것이 잘 보이게
-      take: 50,
+      where: whereCondition,
+      order: {
+        created_at: 'DESC',
+      },
+      take: take,
     });
 
     // 프론트에서 읽기 편하게 뒤집어주기
