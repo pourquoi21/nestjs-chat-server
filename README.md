@@ -44,7 +44,7 @@ graph TD
 
 이 프로젝트는 **Infrastructure(MySQL, Redis)는 Docker**로 구동하고, **Application(NestJS)은 로컬**에서 실행하도록 구성되어 있습니다.
 
-### 1. Prerequisites (사전 준비)
+### 1. 사전 준비
 * Node.js (v16 이상)
 * Docker & Docker Compose
 
@@ -100,14 +100,14 @@ npm run start
 * 프로젝트 루트의 `docs/` 폴더에 있는 `[HTTP] NestJS Chat API.postman_collection.json`(Http 요청)과 `[ENV] NestJS Chat - Local.postman_environment.json`(환경 변수)을 Import 해주세요.
 * Postman의 Socket 기능은 하단의 **[Socket.IO 수동 설정 가이드]** 를 참고해주세요.
 
-### ✅ 1. 준비 (Prerequisites)
+### ✅ 1. 준비
 이 프로젝트는 `docker-compose` 실행 시 `init.sql`을 통해 **테스트용 계정과 채팅방이 자동으로 생성**됩니다. 별도의 회원가입 없이 바로 테스트 가능합니다.
 
 * **기본 계정 1:** `postman1@test.com` / `1234`
 * **기본 계정 2:** `postman2@test.com` / `1234`
 * **기본 채팅방:** `ID: 1` (테스트방)
 
-### ✅ 2. 테스트 시나리오 (Step-by-Step)
+### ✅ 2. 테스트 시나리오
 #### **Step 0: 회원가입 (Optional)**
 * `init.sql`의 계정 외에 새로운 유저를 생성해보고 싶다면 **[HTTP] Create Test2 User** 요청을 실행하시면, 새로운 유저(`test2`)가 DB에 생성됩니다.
 
@@ -158,4 +158,5 @@ npm run start
 
 ## 🚀 Future Improvements
 - 현재 `OFFSET` 방식의 페이지네이션을 사용 중이나, 추후 대량의 메시지 처리를 위해 `Cursor-based Pagination`으로 고도화할 계획입니다.
+
 
