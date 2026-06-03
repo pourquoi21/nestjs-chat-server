@@ -158,4 +158,3 @@ npm run start
 
 ## 🚀 Future Improvements
 - 현재 `OFFSET` 방식의 페이지네이션을 사용 중이나, 추후 대량의 메시지 처리를 위해 `Cursor-based Pagination`으로 고도화할 계획입니다.
-
