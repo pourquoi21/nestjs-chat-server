@@ -13,7 +13,7 @@ import { ChatService } from './chat.service';
 import { ChatMessage } from './entities/chat-message.entity';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { ActiveUser } from '../auth/interfaces/active-user.interface';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ChatRoom } from './entities/chat-room-entity';
 

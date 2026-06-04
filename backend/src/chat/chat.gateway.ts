@@ -12,7 +12,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ChatService } from './chat.service';
 import { UsersService } from '../users/users.service';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
-import { ParseIntPipe } from '@nestjs/common';
+import { ParseIntPipe, UseGuards } from '@nestjs/common';
+import { WsJwtGuard } from 'src/auth/guards/ws-jwt.guard';
 
 interface AuthenticatedSocket extends Socket {
   data: {
@@ -39,6 +40,7 @@ interface SocketUser {
   cors: { origin: '*', credentials: true },
   namespace: 'chat',
 })
+@UseGuards(WsJwtGuard)
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server: Server; // 소켓 서버 객체 (전체 공지용)
@@ -76,7 +78,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new Error('User not found');
       }
 
-      client.data.user = { // 소켓 객체에 유저 정보 저장
+      // 소켓 객체에 유저 정보 저장
+      // 구조분해 할당으로 하지 않은 이유: nickname 끼워넣기
+      client.data.user = {
         sub: payload.sub,
         email: payload.email,
         nickname: user.nickname,
