@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 let isAlertActive = false;
 
@@ -24,19 +24,21 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response && error.response.status === 401) {
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 401) {
+                // 이미 얼럿이 떴는지 확인
+                if (isAlertActive) {
+                    return Promise.reject(error);
+                }
 
-            // 이미 얼럿이 떴는지 확인
-            if (isAlertActive) {
-                return Promise.reject(error);
+                isAlertActive = true;
+                alert('세션이 만료되었습니다. 다시 로그인해 주세요.');
+
+                localStorage.removeItem('accessToken');
+                window.location.href = '/login';
+
+                return new Promise(() => {});
             }
-
-            isAlertActive = true;
-            alert('로그인 세션이 만료되었습니다.');
-
-            localStorage.removeItem('accessToken');
-            isAlertActive = false;
-            window.location.href = '/login';
         }
         return Promise.reject(error);
     }
