@@ -14,62 +14,30 @@ const ChatRoomList = () => {
   const [newRoomName, setNewRoomName] = useState('');
   const navigate = useNavigate();
 
-  // 참여한 방 목록 가져오는 함수
-  const fetchMyRooms = async () => {
+  // 방 목록 가져오는 함수
+  const fetchAllRooms = async () => {
     try {
-      const response = await api.get('/chat/rooms');
-      console.log(response);
-      setMyRooms(response.data);
-    } catch (error) {
+      const [myRoomsRes, otherRoomsRes] = await Promise.all([
+        api.get('/chat/rooms'),
+        api.get('/chat/rooms/unjoined')
+      ]);
+
+      setMyRooms(myRoomsRes.data);
+      setOtherRooms(otherRoomsRes.data);
+    } catch (error: any) {
       console.error('방 목록 로드 실패:', error);
+
     }
   };
-
-  // 참여하지 않은 방 목록 가져오는 함수
-  const fetchOtherRooms = async () => {
-    try {
-      const response = await api.get('/chat/rooms/unjoined');
-      console.log(response);
-      setOtherRooms(response.data);
-    } catch (error) {
-      console.error('참여하지않은 방 목록 로그 실패:', error);
-    }
-  }
-
-  useEffect(() => {
-    // 토큰이 아예 없을 경우
-    if (!localStorage.getItem('accessToken')) {
-      alert('로그인이 필요한 서비스입니다.');
-      window.location.href = '/login';
-      return;
-    }
-
-    const fetchAllRooms = async () => {
-      // await fetchMyRooms();
-      // await fetchOtherRooms();
-      try {
-        const [myRoomsRes, otherRoomsRes] = await Promise.all([
-          api.get('/chat/rooms'),
-          api.get('/chat/rooms/unjoined')
-        ]);
-
-        setMyRooms(myRoomsRes.data);
-        setOtherRooms(otherRoomsRes.data);
-      } catch (error) {
-        console.error('방 목록 로드 실패:', error);
-      }
-    };
-    fetchAllRooms();
-  }, []);
 
   // 새 방 만드는 함수
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return alert('방 이름을 입력해주세요.');
     try {
-      // 백엔드에 방 생성 API가 있다고 가정 (예: POST /chat)
       await api.post('/chat/rooms', { title: newRoomName, invitedUserIds: [] }); 
       setNewRoomName('');
-      fetchMyRooms(); // 목록 새로고침
+      // fetchMyRooms();
+      await fetchAllRooms();
       alert('방 생성 완료!');
     } catch (error) {
       alert('방 생성 실패!');
@@ -86,6 +54,10 @@ const ChatRoomList = () => {
       alert('방 입장 실패');
     }
   }
+
+  useEffect(() => {
+    fetchAllRooms();
+  }, []);
 
   return (
     <div style={{ padding: '20px' }}>

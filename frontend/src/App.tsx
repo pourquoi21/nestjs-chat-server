@@ -122,6 +122,7 @@
 // export default App
 
 import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { PrivateRoute } from './components/guards/PrivateRoute';
 import ChatRoomList from './features/chat/ChatRoomList';
 import UserList from './features/users/UserList';
 import LoginPage from './pages/LoginPage';
@@ -138,15 +139,14 @@ function App() {
         {/* 기본 경로일 때 로그인으로 리다이렉트 */}
         <Route path="/" element={<Navigate to="/login" />} />
         
-        {/* 나중에 채팅방 페이지(Chat) 만들면 여기에 추가 */}
         {/* <Route path="/chat" element={<Chat />} /> */}
-        <Route path="/chat/rooms" element={<ChatRoomList />} />
-
-        <Route path="/users/me" element={<MyProfilePage />} />
-
-        <Route path="/users" element={<UserList />} />
-
-        <Route path="/chat/rooms/:roomId" element={<ChatRoomPage />} />
+        {/* 아래는 로그인이 필요한 부분들 */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/chat/rooms" element={<ChatRoomList />}/>
+          <Route path="/users/me" element={<MyProfilePage />}/>
+          <Route path="/users" element={<UserList />}/>
+          <Route path="/chat/rooms/:roomId" element={<ChatRoomPage />} />
+        </Route>
       </Routes>
     </Router>
   );
