@@ -32,7 +32,7 @@ interface AuthenticatedSocket extends Socket {
 
 interface SocketUser {
   sub: number;
-  email: string;
+  // email: string;
   nickname: string;
 }
 
@@ -82,11 +82,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // 구조분해 할당으로 하지 않은 이유: nickname 끼워넣기
       client.data.user = {
         sub: payload.sub,
-        email: payload.email,
+        // email: payload.email,
         nickname: user.nickname,
       };
       console.log(client.data.user);
-      console.log(`[인증 성공] 유저: ${payload.email}, 소켓ID: ${client.id}`);
+      // console.log(`[인증 성공] 유저: ${payload.email}, 소켓ID: ${client.id}`);
+      console.log(`[인증 성공] 유저: ${client.data.user?.nickname}, 소켓ID: ${client.id}`);
       client.emit('ready');
     } catch (error) {
       console.log(
@@ -112,7 +113,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!user) return;
 
     try {
-      console.log('[client] ', client);
+      // console.log('[client] ', client);
       // 이미 멤버인지만 확인
       const isMember = await this.chatService.isRoomMember(room, user.sub);
 
@@ -124,14 +125,17 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       // 통과했다면 socket 작업
       client.join(`${room}`);
       console.log(
-        `[입장] ${client.data.user?.email} 님이 ${room}번방 소켓에 연결됨`,
+        // `[입장] ${client.data.user?.email} 님이 ${room}번방 소켓에 연결됨`,
+        `[입장] ${user.nickname} 님이 ${room}번방 소켓에 연결됨`,
       );
 
-      client.to(`${room}`).emit('notice', `${user.email}님이 입장하셨습니다`);
+      // client.to(`${room}`).emit('notice', `${user.email}님이 입장하셨습니다`);
+      client.to(`${room}`).emit('notice', `${user.nickname}님이 입장하셨습니다`);
       return {
         status: 'success',
         message: `${room}번 방에 입장 완료`,
-        data: { room, user: user.email },
+        // data: { room, user: user.email },
+        data: { room, user: user.nickname },
       };
     } catch (e) {
       console.error('Join Room Error: ', e);

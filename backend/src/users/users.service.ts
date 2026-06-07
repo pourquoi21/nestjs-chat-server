@@ -61,18 +61,20 @@ export class UsersService {
     return user;
   }
 
-  // findByEmail(email: string) {
-  //   return `This action returns a #${email} user`;
-  // }
-
   async findByEmail(email: string): Promise<User | null> {
+    // 실제 DB 조회
+    return this.usersRepository
+      .findOne({ where: { email } });
+  }
+
+  // 해당 쿼리 쓸때는 password강제 select함
+  async findByEmailWithPassword(email: string): Promise<User | null> {
     // 실제 DB 조회
     return this.usersRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
       .where('user.email = :email', { email })
       .getOne();
-      // .findOne({ where: { email } });
   }
 
   async findById(id: number) {

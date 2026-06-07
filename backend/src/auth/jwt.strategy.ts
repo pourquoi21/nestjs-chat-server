@@ -20,6 +20,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // payload: 토큰을 깠을 때 나온 JSON 내용
   validate(payload: JwtPayload) {
     // 여기서 리턴한 값이 req.user에 들어감
-    return { sub: payload.sub, email: payload.email };
+    return { sub: payload.sub
+    //  , email: payload.email
+    };
   }
 }

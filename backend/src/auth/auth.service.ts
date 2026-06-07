@@ -16,7 +16,7 @@ export class AuthService {
     email: string,
     pass: string
   ): Promise<User | null> {
-    const user = await this.usersService.findByEmail(email)
+    const user = await this.usersService.findByEmailWithPassword(email)
 
     if (user && (await bcrypt.compare(pass, user.password))) {
       const { password, ...result } = user; // 보안을 위해 비번은 빼고 리턴
