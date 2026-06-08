@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
+import { UserSearchModal } from '../../components/UserSearchModal';
 
 interface ChatRoom {
   id: string;
@@ -61,6 +62,7 @@ const ChatRoomList = () => {
 
   return (
     <div style={{ padding: '20px' }}>
+      <UserSearchModal />
       <h2>나의 채팅방 목록</h2>
       
       {/* 방 만들기 영역 */}
