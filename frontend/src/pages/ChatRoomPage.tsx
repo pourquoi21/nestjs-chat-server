@@ -10,8 +10,6 @@ interface User {
 
 export interface Message {
     id: number;
-    // temporaryId?: number;
-    // sender_id: number;
     content: string;
     created_at: string;
     user: User;
@@ -37,7 +35,6 @@ const ChatRoomPage = () => {
     useEffect(() => {
         fetchMessages();
 
-
         const token = localStorage.getItem('accessToken');
         const socketUrl = `http://${window.location.hostname}:4000/chat`;
         const numericRoomId = roomId ? parseInt(roomId, 10) : null;
@@ -52,7 +49,7 @@ const ChatRoomPage = () => {
 
         setSocket(newSocket);
 
-        // 백엔드에서 ready신호 주면 입장시키기
+        // connect후 백엔드에서 ready신호 주면 입장시키기
         newSocket.on('ready', () => {
           newSocket.emit('join_room', numericRoomId);
         });
@@ -91,9 +88,6 @@ const ChatRoomPage = () => {
           };
 
           setMessages((prev) => 
-            // prev.map((msg) => 
-            //   msg.id === newMessage.temporaryId ? { ...msg, id: newMessage.id } : msg
-            // )
             [...prev, formattedMessage]
             );
         });

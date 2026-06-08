@@ -95,14 +95,6 @@ export class ChatService {
 
   // 과거 메시지 불러오기 (최신순 50개)
   async getMessages(roomId: number, cursor?: number): Promise<ChatMessage[]> {
-    // async getMessages(roomId: number): Promise<ChatMessage[]> {
-    // OFFSET기반의 방법
-    // const messages = await this.chatRepository.find({
-    //   where: { room_id: roomId },
-    //   order: { created_at: 'DESC' }, // 최근것이 잘 보이게
-    //   take: 50,
-    // });
-
     const take = 50; // 한번에 가져올 개수
 
     const whereCondition: any = {
@@ -151,11 +143,6 @@ export class ChatService {
       // 방제가 없으면 초대된 사람들 닉네임으로 방제를 자동 생성
       // '나'도 포함하도록 수정함
       if (!roomTitle) {
-        // const invitedUsers = await this.userRepository.find({
-        //   where: { id: In(invitedUserIds) }, // invitedUserIds에 있는 ID들 모두 조회
-        //   select: ['nickname'], // 닉네임만 가져오기
-        // });
-        // roomTitle = invitedUsers.map((u) => u.nickname).join(', ');
         const allMemberIds = [...new Set([user.sub, ...invitedUserIds])];
 
         const memberEntities = await this.userRepository.find({

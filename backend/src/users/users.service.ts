@@ -8,7 +8,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class UsersService {
-  // constructor(private dataSource: DataSource) {}
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>, // DataSource 대신 이거 씀
@@ -45,7 +44,6 @@ export class UsersService {
   }
 
   async findAll(): Promise<User[]> {
-    // return `This action returns all users`;
     const allUsers = await this.usersRepository.find();
 
     // TODO: chatservice에서처럼 take와 skip(offset)으로
@@ -54,7 +52,6 @@ export class UsersService {
   }
 
   async findOne(id: number): Promise<User | null> {
-    // return `This action returns a #${id} user`;
     const user = await this.usersRepository.findOne({
       where: { id: id },
     });

@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req, ParseIntPipe,
   ForbiddenException,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -53,6 +54,21 @@ export class UsersController {
   })
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('search')
+  @ApiOperation({
+    summary: '유저 검색',
+    description: '이메일을 이용해 유저를 검색합니다.',
+  })
+  async searchUser(@Query('email') email: string) {
+    const user = await this.usersService.findByEmail(email);
+
+    if (!user) {
+      return { success: false, message: '존재하지 않는 유저입니다.' };
+    }
+
+    return { success: true, user };
   }
 
   @Get(':id')

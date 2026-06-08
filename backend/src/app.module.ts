@@ -25,7 +25,6 @@ import { join } from 'path';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_DATABASE'),
-        // entities: [User],
         autoLoadEntities: true,
         synchronize: false, // NOTE: true로 두면 엔티티/코드를 고치면 서버 켤때 DB테이블도 알아서 고침
         charset: 'utf8mb4_general_ci',
