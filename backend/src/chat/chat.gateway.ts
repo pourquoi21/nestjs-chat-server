@@ -32,7 +32,6 @@ interface AuthenticatedSocket extends Socket {
 
 interface SocketUser {
   sub: number;
-  // email: string;
   nickname: string;
 }
 
@@ -43,7 +42,7 @@ interface SocketUser {
 @UseGuards(WsJwtGuard)
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server; // 소켓 서버 객체 (전체 공지용)
+  server!: Server; // 소켓 서버 객체 (전체 공지용)
 
   // JwtService 주입받기
   constructor(
@@ -185,27 +184,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         }
         // DB에 저장 (비동기)
         const savedMessage = await this.chatService.saveMessage(room, user.sub, msg);
-        // 수정
-        // this.chatService.saveMessage(room, user.sub, msg)
-        //  .then((savedMessage) => {
-            // DB저장 실패하면 로그남기기
-        //    console.error(`[DB 저장 에러] 방: ${room}, 유저: ${userUid}, ${userNickname}, 에러: `, err);
-        //  })
-        //  .catch((err) => {
-        //    console.error(`[DB 저장 에러] 에러: `, err);
-        //  })
-        
-        // this.server.emit('message', {
-        //   id: savedMessage.id,
-        //   // temporaryId: temporaryId,
-        //   content: msg,
-        //   user: {
-        //     id: userUid,
-        //     nickname: userNickname,
-        //   },
-        //   created_at: savedMessage.created_at || new Date(),
-        //   tmpTime: new Date(savedMessage.created_at).getTime(),
-        // });
 
         // 해당 방에 방송
         this.server.to(`${room}`).emit('message', {

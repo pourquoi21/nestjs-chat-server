@@ -8,20 +8,20 @@ import {
 @Entity('chat_rooms')
 export class ChatRoom {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ length: 100, nullable: true })
-  title: string;
+  title!: string;
 
   @Column({ length: 10, default: 'GROUP' })
-  type: string;
+  type!: string;
 
   @Column('text', { nullable: true })
-  last_message: string;
+  last_message!: string;
 
   @Column({ type: 'timestamp', nullable: true })
-  last_message_at: Date;
+  last_message_at!: Date;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 }

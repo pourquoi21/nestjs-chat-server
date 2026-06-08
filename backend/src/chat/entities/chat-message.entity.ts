@@ -11,21 +11,21 @@ import { User } from '../../users/entities/user.entity';
 @Entity('chat_messages') // DB 테이블 이름과 일치
 export class ChatMessage {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column()
-  room_id: number;
+  room_id!: number;
 
   @Column()
-  sender_id: number;
+  sender_id!: number;
 
   @Column('text')
-  content: string;
+  content!: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'sender_id' })
-  user: User;
+  user!: User;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 }
