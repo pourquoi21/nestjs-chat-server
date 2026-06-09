@@ -54,7 +54,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT || 4000, '0.0.0.0');
-  console.log('---서버 4000 에서 시작---');
+  const port = process.env.PORT || 4000;
+
+  await app.listen(port, '0.0.0.0');
+  console.log(`---서버 ${port} 에서 시작---`);
 }
 bootstrap();
