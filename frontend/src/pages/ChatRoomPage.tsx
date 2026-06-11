@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import api from '../api/axios';
@@ -22,6 +22,15 @@ const ChatRoomPage = () => {
     const [inputText, setInputText] = useState('');
     const [socket, setSocket] = useState<Socket | null>(null);
 
+    // 맨 아래 지점을 가리킬 Ref
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // 스크롤을 맨 아래로 내려주기
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth'});
+    }
+
+    // 기존의 메시지 로드
     const fetchMessages = async () => {
         try {
             const response = await api.get(`chat/rooms/${roomId}/messages`);
@@ -31,6 +40,10 @@ const ChatRoomPage = () => {
             console.error('메시지 로드 실패:', error);
         }
     };
+
+    useEffect(() => {
+      scrollToBottom();
+    }, [messages]);
 
     useEffect(() => {
         fetchMessages();
@@ -139,12 +152,20 @@ const ChatRoomPage = () => {
       <hr />
       
       {/* 메시지 출력 영역 */}
-      <div style={{ height: '300px', border: '1px solid #ccc', overflowY: 'scroll', padding: '10px' }}>
+      <div
+        style={{
+          height: '300px',
+          border: '1px solid #ccc',
+          overflowY: 'scroll',
+          padding: '10px'
+          }}
+      >
         {messages.map((msg) => (
           <p key={msg.id}>
             <strong>{msg.user.nickname}:</strong> {msg.content}
           </p>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* 메시지 입력 폼 */}
