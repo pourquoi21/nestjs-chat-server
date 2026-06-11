@@ -1,18 +1,18 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     super({
       // 헤더의 Bearer 토큰을 가져옴
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       // 토큰 만들 때 썼던 비밀키랑 똑같이
-      // (실무에선 ConfigService로 환경변수 가져오지만, 지금은 하드코딩으로)
-      secretOrKey: 'secretKey', // TODO: AuthModule에 등록한 secret과 일치
+      secretOrKey: configService.get<string>('JWT_SECRET') as string,
     });
   }
 

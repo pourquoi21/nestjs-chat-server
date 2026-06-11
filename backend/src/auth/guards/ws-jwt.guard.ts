@@ -1,4 +1,5 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Observable } from 'rxjs';
@@ -6,7 +7,10 @@ import { Socket } from 'socket.io';
 
 @Injectable()
 export class WsJwtGuard implements CanActivate {
-    constructor(private readonly jwtService: JwtService) {}
+    constructor(
+        private readonly jwtService: JwtService,
+        private readonly configService: ConfigService
+    ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         try {
@@ -19,7 +23,7 @@ export class WsJwtGuard implements CanActivate {
 
             const token = rawToken.startsWith('Bearer ') ? rawToken.split(' ')[1] : rawToken;
             const payload = this.jwtService.verify(token, {
-                secret: 'secretKey',
+                secret: this.configService.get<string>('JWT_SECRET'),
             });
 
             client.data.user = payload;

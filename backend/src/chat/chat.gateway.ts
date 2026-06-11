@@ -14,6 +14,7 @@ import { UsersService } from '../users/users.service';
 import { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { ParseIntPipe, UseGuards } from '@nestjs/common';
 import { WsJwtGuard } from 'src/auth/guards/ws-jwt.guard';
+import { ConfigService } from '@nestjs/config';
 
 interface AuthenticatedSocket extends Socket {
   data: {
@@ -46,6 +47,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   // JwtService 주입받기
   constructor(
+    private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly chatService: ChatService,
     private readonly usersService: UsersService,
@@ -68,7 +70,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     try {
       const payload = this.jwtService.verify<JwtPayload>(token, {
-        secret: 'secretKey',
+        secret: this.configService.get<string>('JWT_SECRET'),
       });
 
       const user = await this.usersService.findById(payload.sub);

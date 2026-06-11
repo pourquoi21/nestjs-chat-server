@@ -15,7 +15,7 @@ import { JwtStrategy } from './jwt.strategy';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'secretKey', // .env에서 가져옴
+        secret: configService.get<string>('JWT_SECRET'), // .env에서 가져옴
         signOptions: { expiresIn: '1h' }, // 토큰 유효시간 1시간
       }),
     }),
