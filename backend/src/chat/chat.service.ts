@@ -11,11 +11,11 @@ import { ActiveUser } from '../auth/interfaces/active-user.interface';
 @Injectable()
 export class ChatService {
   constructor(
+    private dataSource: DataSource,
     @InjectRepository(ChatMessage)
     private chatRepository: Repository<ChatMessage>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private dataSource: DataSource,
     @InjectRepository(ChatRoomMember)
     private chatRoomMemberRepository: Repository<ChatRoomMember>,
     @InjectRepository(ChatRoom)
