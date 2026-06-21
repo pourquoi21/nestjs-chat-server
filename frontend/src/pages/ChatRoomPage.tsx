@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import api from '../api/axios';
+import { UserSearchModal } from '../components/UserSearchModal';
 
 interface User {
   id: number;
@@ -149,6 +150,7 @@ const ChatRoomPage = () => {
     return (
     <div style={{ padding: '20px' }}>
       <h2>채팅방 {roomId}</h2>
+      <UserSearchModal />
       <hr />
       
       {/* 메시지 출력 영역 */}
