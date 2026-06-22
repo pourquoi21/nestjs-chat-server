@@ -9,17 +9,26 @@ interface User {
   nickname: string;
 }
 
-export interface Message {
-    id: number;
-    content: string;
-    created_at: string;
-    user: User;
+export interface ChatMessage {
+  type: 'chat';
+  id: number;
+  content: string;
+  created_at: string;
+  user: User;
 }
+
+interface SystemMessage {
+  type: 'system';
+  id: number;
+  content: string;
+}
+
+type MessageItem = ChatMessage | SystemMessage;
 
 const ChatRoomPage = () => {
     // 주소창의 roomId값을 가져온다.
     const { roomId } = useParams<{ roomId: string }>();
-    const [messages, setMessages] = useState<Message[]>([]);
+    const [messages, setMessages] = useState<MessageItem[]>([]);
     const [inputText, setInputText] = useState('');
     const [socket, setSocket] = useState<Socket | null>(null);
 
@@ -92,9 +101,10 @@ const ChatRoomPage = () => {
 
         // 메시지 수신, 백엔드에서 emit으로 보내주는것을 기다림
         // 이때 수신되면 기존메시지에 새로운 메시지 추가
-        newSocket.on('message', (newMessage: Message) => {
+        newSocket.on('message', (newMessage: ChatMessage) => {
           console.log(newMessage);
-          const formattedMessage: Message = {
+          const formattedMessage: ChatMessage = {
+            type: 'chat',
             id: newMessage.id,
             content: newMessage.content,
             user: newMessage.user,
@@ -103,8 +113,21 @@ const ChatRoomPage = () => {
 
           setMessages((prev) => 
             [...prev, formattedMessage]
-            );
+          );
         });
+
+        // 시스템 메시지 수신
+        newSocket.on('system_message', (newMessage: SystemMessage) => {
+          const systemMessage: SystemMessage = {
+            type: 'system',
+            id: Date.now(),
+            content: newMessage.content,
+          }
+          
+          setMessages((prev) => 
+            [ ...prev, systemMessage ]
+          );
+        })
 
         // 컴포넌트 종료시 cleanup
         return () => {
@@ -115,6 +138,7 @@ const ChatRoomPage = () => {
     }, [roomId]);
 
 
+    // 메시지 보내기
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -147,10 +171,15 @@ const ChatRoomPage = () => {
         }
     };
 
+    // 초대하기
+    const handleInviteSubmit = async (userIds: number[]) => {
+      await api.post(`chat/rooms/${roomId}/invite`, { invitedUserIds: userIds });
+    };
+
     return (
     <div style={{ padding: '20px' }}>
       <h2>채팅방 {roomId}</h2>
-      <UserSearchModal />
+      <UserSearchModal onInviteSubmit={handleInviteSubmit} />
       <hr />
       
       {/* 메시지 출력 영역 */}
@@ -162,11 +191,17 @@ const ChatRoomPage = () => {
           padding: '10px'
           }}
       >
-        {messages.map((msg) => (
+        {messages.map((msg) => 
+          msg.type == 'system' ? (
+            <div key={msg.id} style={{ textAlign: 'center', color: '#888' }}>
+              ── {msg.content} ──
+            </div>
+          ) : (
           <p key={msg.id}>
             <strong>{msg.user.nickname}:</strong> {msg.content}
           </p>
-        ))}
+          )
+        )}
         <div ref={messagesEndRef} />
       </div>
 
