@@ -16,11 +16,16 @@ import { ActiveUser } from '../auth/interfaces/active-user.interface';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ChatRoom } from './entities/chat-room-entity';
+import { InviteMembersDto } from './dto/invite-members.dto';
+import { ChatGateway } from './chat.gateway';
 
 @ApiTags('채팅 API')
 @Controller('chat')
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly chatGateway: ChatGateway
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('rooms')
@@ -37,6 +42,40 @@ export class ChatController {
     @Body() createRoomDto: CreateRoomDto,
   ) {
     return await this.chatService.createRoom(req.user, createRoomDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('rooms/:roomId/invite')
+  @ApiOperation({
+    summary: '유저 초대하기',
+    description: '방 제목과 초대할 유저들의 ID를 입력받아 방에 초대합니다.',
+  })
+  @ApiCreatedResponse({
+    description: '초대 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: '초대 완료',
+        },
+      },
+    },
+  })
+  async inviteMembers(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Req() req: { user: ActiveUser },
+    @Body() inviteMembersDto: InviteMembersDto,
+  ) {
+    const { invitedNicknames } = await this.chatService.inviteMembers(
+      roomId,
+      req.user.sub,
+      inviteMembersDto);
+
+    this.chatGateway.server.to(`${roomId}`).emit('system_message', {
+      content: `${invitedNicknames.join(', ')}님이 초대되었습니다.`,
+    })
+    return { message: '초대 완료' };
   }
 
   @Get('rooms')

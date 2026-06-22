@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, LessThan, Repository } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { ChatRoom } from './entities/chat-room-entity';
 import { ChatRoomMember } from './entities/chat-room-member.entity';
 import { ActiveUser } from '../auth/interfaces/active-user.interface';
+import { InviteMembersDto } from './dto/invite-members.dto';
 
 @Injectable()
 export class ChatService {
@@ -185,6 +186,52 @@ export class ChatService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  // 유저 추가 초대하기
+  async inviteMembers(
+    roomId: number,
+    requesterId: number,
+    inviteMembersDto: InviteMembersDto): Promise<{ invitedNicknames: string[] }> {
+    const { invitedUserIds } = inviteMembersDto;
+
+    // 요청자가 방 멤버인지 확인
+    const membership = await this.chatRoomMemberRepository.findOne({
+      where: { room_id: roomId, user_id: requesterId },
+    });
+
+    if (!membership) throw new NotFoundException('방에 참여하고 있는 사람만이 초대를 할 수 있습니다.');
+
+    // 해당 방의 멤버인 유저 한번에 조회
+    const existingMembers = await this.chatRoomMemberRepository.find({
+      where: { room_id: roomId, user_id: In(invitedUserIds) },
+    });
+
+    const existingUserIds = new Set(existingMembers.map((m) => m.user_id));
+
+    // 이미 멤버인 유저는 제외
+    const newUserIds = [...new Set(invitedUserIds)].filter((id) => !existingUserIds.has(id));
+
+    if (newUserIds.length === 0) throw new BadRequestException('초대할 유저가 없습니다.');
+
+    const invitedUsersEntities = await this.userRepository.find({
+      where: { id: In(newUserIds) },
+      select: ['nickname']
+    })
+
+    // const invitedUsersNicknames = invitedUsersEntities.map((e) => e.nickname).join(', ');
+
+    const members = newUserIds.map((userId) => {
+      const member = new ChatRoomMember();
+      member.room_id = roomId;
+      member.user_id = userId;
+      return member;
+    });
+
+    await this.chatRoomMemberRepository.save(members);
+    // console.log(`[DB 저장됨] ${invitedUsersNicknames}가 방 ${roomId}의 멤버가 됨`);
+
+    return { invitedNicknames: invitedUsersEntities.map((u) => u.nickname) };
   }
 
   // [HTTP용] 방에 들어가면 DB에 멤버로 insert하는 메서드
