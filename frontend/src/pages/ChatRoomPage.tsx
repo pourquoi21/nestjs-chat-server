@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import api from '../api/axios';
 import { UserSearchModal } from '../components/UserSearchModal';
@@ -31,6 +31,8 @@ const ChatRoomPage = () => {
     const [messages, setMessages] = useState<MessageItem[]>([]);
     const [inputText, setInputText] = useState('');
     const [socket, setSocket] = useState<Socket | null>(null);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const navigate = useNavigate();
 
     // 맨 아래 지점을 가리킬 Ref
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -176,46 +178,94 @@ const ChatRoomPage = () => {
       await api.post(`chat/rooms/${roomId}/invite`, { invitedUserIds: userIds });
     };
 
+    // 방에서 나가기
+    const handleLeaveRoom = async () => {
+      if (!window.confirm('방에서 나가시겠습니까?')) return;
+      await api.delete(`/chat/rooms/${roomId}/leave`);
+      navigate('/chat/rooms');
+    };
+
     return (
-    <div style={{ padding: '20px' }}>
-      <h2>채팅방 {roomId}</h2>
-      <UserSearchModal onInviteSubmit={handleInviteSubmit} />
-      <hr />
-      
-      {/* 메시지 출력 영역 */}
-      <div
-        style={{
-          height: '300px',
-          border: '1px solid #ccc',
-          overflowY: 'scroll',
-          padding: '10px'
-          }}
-      >
-        {messages.map((msg) => 
-          msg.type == 'system' ? (
-            <div key={msg.id} style={{ textAlign: 'center', color: '#888' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '0' }}>
+  
+      {/* 헤더 */}
+      <div style={styles.header}>
+        <button onClick={() => navigate('/chat/rooms')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+          ← 뒤로
+        </button>
+        <h2 style={{ margin: 0, fontSize: '16px' }}>채팅방 {roomId}</h2>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <button onClick={() => setIsInviteModalOpen(true)}
+            style={styles.inviteBtn}  
+          >초대</button>
+          <UserSearchModal
+            onInviteSubmit={handleInviteSubmit}
+            isOpen={isInviteModalOpen}
+            onClose={() => setIsInviteModalOpen(false)}  
+          />
+          <button onClick={handleLeaveRoom}
+            style={styles.leaveBtn}>
+            나가기
+          </button>
+        </div>
+      </div>
+
+      {/* 메시지 영역 */}
+      <div style={{ flex: 1, overflowY: 'scroll', padding: '16px' }}>
+        {messages.map((msg) =>
+          msg.type === 'system' ? (
+            <div key={msg.id} style={{ textAlign: 'center', color: '#888', margin: '8px 0', fontSize: '13px' }}>
               ── {msg.content} ──
             </div>
           ) : (
-          <p key={msg.id}>
-            <strong>{msg.user.nickname}:</strong> {msg.content}
-          </p>
+            <p key={msg.id} style={{ margin: '6px 0' }}>
+              <strong>{msg.user.nickname}:</strong> {msg.content}
+            </p>
           )
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 메시지 입력 폼 */}
-      <form onSubmit={handleSendMessage}
-        style={{ marginTop: '10px' }}>
+      {/* 입력 영역 */}
+      <div style={styles.msgBox}>
         <input
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="메시지를 입력해 주세요." />
-        <button type="submit">전송</button>
-      </form>
+          placeholder="메시지를 입력해 주세요."
+          style={styles.typingBox}
+        />
+        <button
+          onClick={handleSendMessage}
+          style={styles.sendBtn}
+        >
+          전송
+        </button>
+      </div>
     </div>
   );
 };
+
+const styles = {
+  sendBtn: { marginLeft: '8px', padding: '8px 16px',
+    backgroundColor: '#4CAF50', color: 'white', border: 'none',
+    borderRadius: '20px', cursor: 'pointer'
+  },
+  typingBox: {
+    flex: 1, padding: '8px 12px', border: '1px solid #ddd',
+    borderRadius: '20px', outline: 'none'
+  },
+  msgBox: { 
+    display: 'flex', padding: '12px 20px', borderTop: '1px solid #ddd', backgroundColor: '#fff'
+  },
+  header: { 
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '12px 20px', borderBottom: '1px solid #ddd', backgroundColor: '#fff'
+  },
+  leaveBtn: { padding: '8px 16px', backgroundColor: '#e53e3e',
+    color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer'
+  },
+  inviteBtn: {padding: '8px 16px', backgroundColor: '#999',
+    color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer'}
+}
 
 export default ChatRoomPage;
