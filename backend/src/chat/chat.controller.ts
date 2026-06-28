@@ -31,7 +31,7 @@ export class ChatController {
   @Post('rooms')
   @ApiOperation({
     summary: '채팅방 만들기',
-    description: '방 제목과 초대할 유저 ID를 입력받아 방을 생성합니다.',
+    description: '방 제목을 입력받아 방을 생성합니다.',
   })
   @ApiCreatedResponse({
     description: '방 생성 성공',
@@ -133,7 +133,7 @@ export class ChatController {
     return await this.chatService.getMessages(roomId);
   }
 
-  @Delete('rooms/:roomId/delete')
+  @Delete('rooms/:roomId/leave')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '방에서 나가기' })
   @ApiCreatedResponse({

@@ -132,46 +132,24 @@ export class ChatService {
 
   // (누군가를 초대한) 방 만들기
   async createRoom(user: ActiveUser, createRoomDto: CreateRoomDto) {
-    const { title, invitedUserIds } = createRoomDto;
+    const { title } = createRoomDto;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      let roomTitle = title;
-
-      // 방제가 없으면 초대된 사람들 닉네임으로 방제를 자동 생성
-      // '나'도 포함하도록 수정함
-      if (!roomTitle) {
-        const allMemberIds = [...new Set([user.sub, ...invitedUserIds])];
-
-        const memberEntities = await this.userRepository.find({
-          where: { id: In(allMemberIds) },
-          select: ['nickname'],
-        });
-
-        roomTitle = memberEntities.map((u) => u.nickname).join(', ');
-      }
-
-      // 방 만들기 (제목이 없으면 기본값이라도 넣기)
+      // 방 만들기
       const newRoom = new ChatRoom();
-      newRoom.title = roomTitle || '대화방'; // 위에서 닉네임을 못 구했다면 기본값으로
+      newRoom.title = title || '대화방';
       const savedRoom = await queryRunner.manager.save(ChatRoom, newRoom);
 
-      // 멤버 명단 만들기 (나 + 초대된 사람들)
-      // Set을 써서 혹시 모를 중복 ID 제거 (안전장치)
-      const allMemberIds = [...new Set([user.sub, ...invitedUserIds])];
-
-      const members = allMemberIds.map((userId) => {
-        const member = new ChatRoomMember();
-        member.room_id = savedRoom.id;
-        member.user_id = userId;
-        return member;
-      });
-
-      // 멤버 저장
-      await queryRunner.manager.save(ChatRoomMember, members);
+    
+      // 멤버: 방장      
+      const member = new ChatRoomMember();
+      member.room_id = savedRoom.id;
+      member.user_id = user.sub;
+      await queryRunner.manager.save(ChatRoomMember,member);
 
       await queryRunner.commitTransaction();
 
