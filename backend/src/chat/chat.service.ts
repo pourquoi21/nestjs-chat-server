@@ -73,29 +73,6 @@ export class ChatService {
     return memberships.map((membership) => membership.room);
   }
 
-    // 유저가 속하지 않은 방을 불러오기
-  async getUnjoinedRooms(userId: number): Promise<ChatRoom[]> {
-    try {
-      const query = `
-        SELECT cr.* FROM chat_rooms cr
-        WHERE NOT EXISTS (
-          SELECT 1
-          FROM chat_room_members crm
-          WHERE crm.room_id = cr.id
-          AND crm.user_id = ?
-        )
-        ORDER BY cr.created_at DESC
-      `;
-
-      const unjoinedRooms = await this.dataSource.query(query, [userId]);
-
-      return unjoinedRooms;
-    } catch (error) {
-      console.error('참여하지 않은 방 조회 중 에러 발생: ', error);
-      throw new InternalServerErrorException('방 목록을 불러오는 중 오류가 발생했습니다.');
-    }
-  }
-
   // 과거 메시지 불러오기 (최신순 50개)
   async getMessages(roomId: number, cursor?: number): Promise<ChatMessage[]> {
     const take = 50; // 한번에 가져올 개수

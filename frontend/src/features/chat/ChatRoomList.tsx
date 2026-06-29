@@ -10,20 +10,14 @@ interface ChatRoom {
 
 const ChatRoomList = () => {
   const [myRooms, setMyRooms] = useState<ChatRoom[]>([]);
-  const [otherRooms, setOtherRooms] = useState<ChatRoom[]>([]);
   const [newRoomName, setNewRoomName] = useState('');
   const navigate = useNavigate();
 
   // 방 목록 가져오는 함수
   const fetchAllRooms = async () => {
     try {
-      const [myRoomsRes, otherRoomsRes] = await Promise.all([
-        api.get('/chat/rooms'),
-        api.get('/chat/rooms/unjoined')
-      ]);
-
-      setMyRooms(myRoomsRes.data);
-      setOtherRooms(otherRoomsRes.data);
+      const res = await api.get('/chat/rooms');
+      setMyRooms(res.data);
     } catch (error: any) {
       console.error('방 목록 로드 실패:', error);
 
@@ -34,7 +28,7 @@ const ChatRoomList = () => {
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) return alert('방 이름을 입력해주세요.');
     try {
-      await api.post('/chat/rooms', { title: newRoomName, invitedUserIds: [] }); 
+      await api.post('/chat/rooms', { title: newRoomName }); 
       setNewRoomName('');
       // fetchMyRooms();
       await fetchAllRooms();
@@ -77,34 +71,10 @@ const ChatRoomList = () => {
 
       {/* 참여중인 방 목록 출력 영역 */}
       {myRooms.length === 0 ? (
-        <p>참여 중인 방이 없어. 방을 새로 만들어봐!</p>
+        <p>참여 중인 방이 없습니다. 새로운 방을 만들어보세요.</p>
       ) : (
         <ul>
           {myRooms.map((room) => (
-            <li key={room.id} style={{ marginBottom: '10px' }}>
-              <strong>{room.title}</strong> 
-              <button
-                style={{ marginLeft: '10px' }}
-                onClick={() => handleJoinRoom(room.id)}
-                >
-                  입장하기</button>
-            </li>
-          ))}
-        </ul>
-      )}
-      
-      <hr />
-
-      <h2>참여할 수 있는 방</h2>
-
-      <hr />
-
-      {/* 목록 출력 영역 */}
-      {otherRooms.length === 0 ? (
-        <p>다른 방이 존재하지 않습니다.</p>
-      ) : (
-        <ul>
-          {otherRooms.map((room) => (
             <li key={room.id} style={{ marginBottom: '10px' }}>
               <strong>{room.title}</strong> 
               <button

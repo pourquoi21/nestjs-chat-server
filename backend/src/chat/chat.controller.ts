@@ -88,14 +88,6 @@ export class ChatController {
     return await this.chatService.getMyRooms(req.user.sub);
   }
 
-  @Get('rooms/unjoined')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: '참여하지 않은 채팅방 목록 가져오기' })
-  @ApiCreatedResponse({ description: '성공', type: [ChatRoom] })
-  async getUnjoinedRooms(@Req() req: { user: ActiveUser }): Promise<ChatRoom[]> {
-    return await this.chatService.getUnjoinedRooms(req.user.sub);
-  }
-
   @Post('rooms/:roomId/join')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '기존 채팅방에 참여하기' })
