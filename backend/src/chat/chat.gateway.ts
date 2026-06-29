@@ -211,13 +211,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     
   }
 
-  // 방 나가기
-  @SubscribeMessage('leave_room')
-  handleLeaveRoom(
-    @ConnectedSocket() client: AuthenticatedSocket,
-    @MessageBody(ParseIntPipe) room: number,
-  ) {
-    client.leave(room.toString());
-    client.to(room.toString()).emit('notice', `${client.id}님이 나갔습니다.`);
-  }
+  // @SubscribeMessage('leave_room')
+  // handleLeaveRoom(
+  //   @ConnectedSocket() client: AuthenticatedSocket,
+  //   @MessageBody(ParseIntPipe) room: number,
+  // ) {
+  //   client.leave(room.toString());
+  //   client.to(room.toString()).emit('notice', `${client.id}님이 나갔습니다.`);
+  // }
 }

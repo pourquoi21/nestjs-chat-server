@@ -134,7 +134,7 @@ const ChatRoomPage = () => {
         // 컴포넌트 종료시 cleanup
         return () => {
           console.log('socket end');
-          newSocket.emit('leave_room', parseInt(roomId!));
+          // newSocket.emit('leave_room', parseInt(roomId!));
           newSocket.disconnect();
         }
     }, [roomId]);
