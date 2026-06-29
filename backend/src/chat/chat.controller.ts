@@ -18,6 +18,7 @@ import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ChatRoom } from './entities/chat-room-entity';
 import { InviteMembersDto } from './dto/invite-members.dto';
 import { ChatGateway } from './chat.gateway';
+import { userInfo } from 'os';
 
 @ApiTags('채팅 API')
 @Controller('chat')
@@ -68,7 +69,8 @@ export class ChatController {
     @Body() inviteMembersDto: InviteMembersDto,
   ) {
     const { invitedNicknames } = await this.chatService.inviteMembers(
-      roomId,
+    // await this.chatService.inviteMembers(
+    roomId,
       req.user.sub,
       inviteMembersDto);
 
@@ -152,6 +154,16 @@ export class ChatController {
     @Param('roomId', ParseIntPipe) roomId: number,
     @Req() req: { user: ActiveUser },
   ) {
-    return await this.chatService.leaveRoom(roomId, req.user.sub);
+  
+    const user = await this.chatService.leaveRoom(roomId, req.user.sub);
+
+    this.chatGateway.server.to(`${roomId}`).emit('system_message', {
+      content: `${user.nickname}님이 나갔습니다.`,
+    })
+
+    // this.chatGateway.server.to(`${roomId}`).emit('system_message', {
+    //   content: `${user}`
+    // })
+   return { message: '퇴장 완료' };
   }
 }

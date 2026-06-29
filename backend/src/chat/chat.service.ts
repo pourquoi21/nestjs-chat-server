@@ -8,6 +8,8 @@ import { ChatRoom } from './entities/chat-room-entity';
 import { ChatRoomMember } from './entities/chat-room-member.entity';
 import { ActiveUser } from '../auth/interfaces/active-user.interface';
 import { InviteMembersDto } from './dto/invite-members.dto';
+import { MessageType } from './entities/chat-message.entity';
+import { getSystemErrorMap } from 'util';
 
 @Injectable()
 export class ChatService {
@@ -117,7 +119,8 @@ export class ChatService {
         user: {
           id: true,
           nickname: true,
-        }
+        },
+        type: true,
       },
       order: {
         created_at: 'DESC',
@@ -173,43 +176,75 @@ export class ChatService {
     inviteMembersDto: InviteMembersDto): Promise<{ invitedNicknames: string[] }> {
     const { invitedUserIds } = inviteMembersDto;
 
-    // 요청자가 방 멤버인지 확인
-    const membership = await this.chatRoomMemberRepository.findOne({
-      where: { room_id: roomId, user_id: requesterId },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!membership) throw new NotFoundException('방에 참여하고 있는 사람만이 초대를 할 수 있습니다.');
+    try {
+      // 요청자가 방 멤버인지 확인
+      const membership = await queryRunner.manager.findOne(ChatRoomMember, {
+        where: { room_id: roomId, user_id: requesterId },
+      });
 
-    // 해당 방의 멤버인 유저 한번에 조회
-    const existingMembers = await this.chatRoomMemberRepository.find({
-      where: { room_id: roomId, user_id: In(invitedUserIds) },
-    });
+      if (!membership) throw new NotFoundException('방에 참여하고 있는 사람만이 초대를 할 수 있습니다.');
 
-    const existingUserIds = new Set(existingMembers.map((m) => m.user_id));
+      // 해당 방의 멤버인 유저 한번에 조회
+      const existingMembers = await queryRunner.manager.find(ChatRoomMember, {
+        where: { room_id: roomId, user_id: In(invitedUserIds) },
+      });
 
-    // 이미 멤버인 유저는 제외
-    const newUserIds = [...new Set(invitedUserIds)].filter((id) => !existingUserIds.has(id));
+      const existingUserIds = new Set(existingMembers.map((m) => m.user_id));
 
-    if (newUserIds.length === 0) throw new BadRequestException('초대할 유저가 없습니다.');
+      // 이미 멤버인 유저는 제외
+      const newUserIds = [...new Set(invitedUserIds)].filter(
+        (id) => !existingUserIds.has(id)
+      );
 
-    const invitedUsersEntities = await this.userRepository.find({
-      where: { id: In(newUserIds) },
-      select: ['nickname']
-    })
+      if (newUserIds.length === 0) throw new BadRequestException('초대할 유저가 없습니다.');
 
-    // const invitedUsersNicknames = invitedUsersEntities.map((e) => e.nickname).join(', ');
+      
+      // const invitedUsersNicknames = invitedUsersEntities.map((e) => e.nickname).join(', ');
+      
+      const members = newUserIds.map((userId) => {
+        const member = new ChatRoomMember();
+        member.room_id = roomId;
+        member.user_id = userId;
+        return member;
+      });
+      
+      // await this.chatRoomMemberRepository.save(members);
+      await queryRunner.manager.save(ChatRoomMember, members);
+      // console.log(`[DB 저장됨] ${invitedUsersNicknames}가 방 ${roomId}의 멤버가 됨`);
+      
+      // 닉네임을 구함
+      const invitedUsersEntities = await queryRunner.manager.find(User, {
+        where: { id: In(newUserIds) },
+        select: ['nickname']
+      })
+      
+      const invitedNicknames = 
+        invitedUsersEntities.map((u) => u.nickname);
 
-    const members = newUserIds.map((userId) => {
-      const member = new ChatRoomMember();
-      member.room_id = roomId;
-      member.user_id = userId;
-      return member;
-    });
+      const systemMessage = new ChatMessage();
+      systemMessage.room_id = roomId;
+      systemMessage.sender_id = null;
+      systemMessage.content = `${invitedNicknames.join(', ')}님이 초대되었습니다.`;
+      systemMessage.type = MessageType.SYSTEM;
 
-    await this.chatRoomMemberRepository.save(members);
-    // console.log(`[DB 저장됨] ${invitedUsersNicknames}가 방 ${roomId}의 멤버가 됨`);
+      await queryRunner.manager.save(ChatMessage, systemMessage);
 
-    return { invitedNicknames: invitedUsersEntities.map((u) => u.nickname) };
+      await queryRunner.commitTransaction();
+
+      // socket message는 controller에서 보낸다
+      // 여기에서 보내려면 chatGateway와 순환참조 발생
+      
+      return { invitedNicknames };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   // [HTTP용] 방에 들어가면 DB에 멤버로 insert하는 메서드
@@ -243,14 +278,41 @@ export class ChatService {
 
   // 방에서 나가기
   async leaveRoom(roomId: number, userId: number) {
-    const result = await this.chatRoomMemberRepository.delete({
-      room_id: roomId,
-      user_id: userId,
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (result.affected === 0) {
-      throw new NotFoundException('해당 방에 참여하고 있지 않은 사용자입니다.');
-    }
-    return { message: '방에서 성공적으로 나갔습니다.' };
+    try {
+      // 닉네임 조회(controller에서 emit하기위해)
+      const user = await queryRunner.manager.findOne(User, {
+        where: { id: userId },
+        select: ['nickname'],
+      });
+
+      const result = await queryRunner.manager.delete(ChatRoomMember, {
+        room_id: roomId,
+        user_id: userId,
+      });
+
+      if (result.affected === 0) {
+        throw new NotFoundException('해당 방에 참여하고 있지 않은 사용자입니다.');
+      }
+
+      const systemMessage = new ChatMessage();
+      systemMessage.room_id = roomId;
+      systemMessage.sender_id = null;
+      systemMessage.content = `${user!.nickname}님이 나갔습니다.`;
+      systemMessage.type = MessageType.SYSTEM;
+      await queryRunner.manager.save(ChatMessage, systemMessage);
+
+      await queryRunner.commitTransaction();   
+
+      return { nickname: user!.nickname };
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }    
   }
 }
