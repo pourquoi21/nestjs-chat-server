@@ -212,17 +212,36 @@ const ChatRoomPage = () => {
 
       {/* 메시지 영역 */}
       <div style={{ flex: 1, overflowY: 'scroll', padding: '16px' }}>
-        {messages.map((msg) =>
-          msg.type === 'system' ? (
-            <div key={msg.id} style={{ textAlign: 'center', color: '#888', margin: '8px 0', fontSize: '13px' }}>
-              ── {msg.content} ──
+        {messages.map((msg, index) => {
+          const currentDate = 'created_at' in msg
+            ? new Date(msg.created_at).toLocaleDateString('ko-KR')
+            : null;
+          const prevMsg = messages[index - 1];
+          const prevDate = prevMsg && 'created_at' in prevMsg
+            ? new Date(prevMsg.created_at).toLocaleDateString('ko-KR')
+            : null;
+          const showDateDivider = currentDate && currentDate !== prevDate;
+
+          return (
+            <div key={msg.id}>
+              {showDateDivider && (
+                 <div style={{ textAlign: 'center', color: '#888', margin: '12px 0', fontSize: '12px' }}>
+                  ── {currentDate} ──
+                </div>
+              )}
+              {msg.type === 'system' ? (
+                <div style={{ textAlign: 'center', color: '#888', margin: '8px 0', fontSize: '13px' }}>
+                  ── {msg.content} ──
+                </div>
+              ) : (
+                <p key={msg.id} style={{ margin: '6px 0' }}>
+                  <strong>{msg.user.nickname}:</strong> {msg.content}
+                  <small>{new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit'})}</small>
+                </p>
+              )}
             </div>
-          ) : (
-            <p key={msg.id} style={{ margin: '6px 0' }}>
-              <strong>{msg.user.nickname}:</strong> {msg.content}
-            </p>
-          )
-        )}
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
 
