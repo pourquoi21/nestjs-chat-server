@@ -128,27 +128,30 @@ import UserList from './features/users/UserList';
 import LoginPage from './pages/LoginPage';
 import MyProfilePage from './pages/MyProfilePage';
 import ChatRoomPage from './pages/ChatRoomPage';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* 로그인 페이지 */}
-        <Route path="/login" element={<LoginPage />} />
-        
-        {/* 기본 경로일 때 로그인으로 리다이렉트 */}
-        <Route path="/" element={<Navigate to="/login" />} />
-        
-        {/* <Route path="/chat" element={<Chat />} /> */}
-        {/* 아래는 로그인이 필요한 부분들 */}
-        <Route element={<PrivateRoute />}>
-          <Route path="/chat/rooms" element={<ChatRoomList />}/>
-          <Route path="/users/me" element={<MyProfilePage />}/>
-          <Route path="/users" element={<UserList />}/>
-          <Route path="/chat/rooms/:roomId" element={<ChatRoomPage />} />
-        </Route>
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* 로그인 페이지 */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* 기본 경로일 때 로그인으로 리다이렉트 */}
+          <Route path="/" element={<Navigate to="/login" />} />
+          
+          {/* <Route path="/chat" element={<Chat />} /> */}
+          {/* 아래는 로그인이 필요한 부분들 */}
+          <Route element={<PrivateRoute />}>
+            <Route path="/chat/rooms" element={<ChatRoomList />}/>
+            <Route path="/users/me" element={<MyProfilePage />}/>
+            <Route path="/users" element={<UserList />}/>
+            <Route path="/chat/rooms/:roomId" element={<ChatRoomPage />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 
