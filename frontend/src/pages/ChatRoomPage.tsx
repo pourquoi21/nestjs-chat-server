@@ -1,38 +1,22 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import api from '../api/axios';
 import { UserSearchModal } from '../components/UserSearchModal';
+import { MessageItem } from '../components/MessageItem';
+import { useAuth } from '../context/AuthContext';
+import type { MessageType, ChatMessage, SystemMessage } from '../types/message';
 
-interface User {
-  id: number;
-  nickname: string;
-}
-
-export interface ChatMessage {
-  type: 'chat';
-  id: number;
-  content: string;
-  created_at: string;
-  user: User;
-}
-
-interface SystemMessage {
-  type: 'system';
-  id: number;
-  content: string;
-}
-
-type MessageItem = ChatMessage | SystemMessage;
 
 const ChatRoomPage = () => {
     // 주소창의 roomId값을 가져온다.
     const { roomId } = useParams<{ roomId: string }>();
-    const [messages, setMessages] = useState<MessageItem[]>([]);
+    const [messages, setMessages] = useState<MessageType[]>([]);
     const [inputText, setInputText] = useState('');
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const navigate = useNavigate();
+    const { currentUser, isLoading } = useAuth();
 
     // 맨 아래 지점을 가리킬 Ref
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -46,7 +30,6 @@ const ChatRoomPage = () => {
     const fetchMessages = async () => {
         try {
             const response = await api.get(`chat/rooms/${roomId}/messages`);
-            console.log(response.data);
             setMessages(response.data);
         } catch (error) {
             console.error('메시지 로드 실패:', error);
@@ -139,6 +122,7 @@ const ChatRoomPage = () => {
         }
     }, [roomId]);
 
+    if (isLoading) return null;
 
     // 메시지 보내기
     const handleSendMessage = (e: React.FormEvent) => {
@@ -229,16 +213,7 @@ const ChatRoomPage = () => {
                   ── {currentDate} ──
                 </div>
               )}
-              {msg.type === 'system' ? (
-                <div style={{ textAlign: 'center', color: '#888', margin: '8px 0', fontSize: '13px' }}>
-                  ── {msg.content} ──
-                </div>
-              ) : (
-                <p key={msg.id} style={{ margin: '6px 0' }}>
-                  <strong>{msg.user.nickname}:</strong> {msg.content}
-                  <small>{new Date(msg.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit'})}</small>
-                </p>
-              )}
+              <MessageItem msg={msg} currentUserId={currentUser!.id} />
             </div>
           );
         })}
