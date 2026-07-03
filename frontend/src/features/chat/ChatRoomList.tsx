@@ -30,7 +30,6 @@ const ChatRoomList = () => {
     try {
       await api.post('/chat/rooms', { title: newRoomName }); 
       setNewRoomName('');
-      // fetchMyRooms();
       await fetchAllRooms();
       alert('방 생성 완료!');
     } catch (error) {
@@ -41,7 +40,6 @@ const ChatRoomList = () => {
   // 방 입장 함수
   const handleJoinRoom = async (roomId: string) => {
     try {
-      await api.post(`/chat/rooms/${roomId}/join`);
       navigate(`/chat/rooms/${roomId}`);
     } catch (error) {
       console.error('방 입장 실패: ', error);

@@ -88,30 +88,6 @@ export class ChatController {
     return await this.chatService.getMyRooms(req.user.sub);
   }
 
-  @Post('rooms/:roomId/join')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: '기존 채팅방에 참여하기' })
-  @ApiCreatedResponse({
-    description: '방 참여 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'string',
-          example: '방 참여 완료',
-        },
-      },
-    },
-  })
-  async joinRoom(
-    @Param('roomId', ParseIntPipe) roomId: number,
-    @Req() req: { user: ActiveUser },
-  ) {
-    // Service의 Insert 메서드 호출
-    await this.chatService.joinRoomMember(roomId, req.user.sub);
-    return { message: '방 참여 완료' };
-  }
-
   @Get('rooms/:roomId/messages')
   @ApiOperation({
     summary: '채팅방 메시지 가져오기',

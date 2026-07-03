@@ -178,7 +178,6 @@ export class ChatService {
       );
 
       if (newUserIds.length === 0) throw new BadRequestException('초대할 유저가 없습니다.');
-
       
       // const invitedUsersNicknames = invitedUsersEntities.map((e) => e.nickname).join(', ');
       
@@ -221,26 +220,6 @@ export class ChatService {
       throw error;
     } finally {
       await queryRunner.release();
-    }
-  }
-
-  // [HTTP용] 방에 들어가면 DB에 멤버로 insert하는 메서드
-  // controller에서 호출
-  async joinRoomMember(roomId: number, userId: number) {
-    const room = await this.chatRoomRepository.findOneBy({ id: roomId });
-    if (!room) throw new NotFoundException('방이 존재하지 않습니다.');
-
-    const existingMember = await this.chatRoomMemberRepository.findOne({
-      where: { room_id: roomId, user_id: userId },
-    });
-
-    if (!existingMember) {
-      const newMember = this.chatRoomMemberRepository.create({
-        room_id: roomId,
-        user_id: userId,
-      });
-      await this.chatRoomMemberRepository.save(newMember);
-      console.log(`[DB 저장됨] 유저 ${userId}가 방 ${roomId}의 멤버가 됨`);
     }
   }
 
