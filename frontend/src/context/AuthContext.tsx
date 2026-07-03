@@ -4,13 +4,18 @@ import api from '../api/axios';
 interface AuthContextType {
     currentUser: { id: number; nickname: string } | null;
     isLoading: boolean;
+    setCurrentUser: ( user: { id: number, nickname: string } | null ) => void;
 }
 
 interface AuthProviderProps {
     children: React.ReactNode;
 }
 
-const AuthContext = createContext<AuthContextType>({ currentUser: null, isLoading: true });
+const AuthContext = createContext<AuthContextType>({
+    currentUser: null,
+    isLoading: true,
+    setCurrentUser: () => {}, 
+});
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [currentUser, setCurrentUser] = useState<AuthContextType['currentUser']>(null);
@@ -31,7 +36,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ currentUser, isLoading }}>
+        <AuthContext.Provider value={{ currentUser, isLoading, setCurrentUser }}>
             {children}
         </AuthContext.Provider>
     );

@@ -2,9 +2,13 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoginForm from '../features/auth/LoginForm';
 import { login } from '../features/auth/authApi';
+import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
+
 
 const LoginPage = () => {
     const navigate = useNavigate();
+    const { setCurrentUser } = useAuth();
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -17,6 +21,8 @@ const LoginPage = () => {
         try {
             const data = await login({ email, password });
             localStorage.setItem('accessToken', data.access_token);
+            const meRes = await api.get('/users/me');
+            setCurrentUser({ id: meRes.data.id, nickname: meRes.data.nickname });
             alert('로그인 성공!');
             navigate('/chat/rooms');
         } catch (error: any) {
