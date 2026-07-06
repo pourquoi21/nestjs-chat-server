@@ -1,6 +1,7 @@
 // frontend/src/components/ChatRoomList.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Header } from '../../components/Header';
 import api from '../../api/axios';
 
 interface ChatRoom {
@@ -53,7 +54,8 @@ const ChatRoomList = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>나의 채팅방 목록</h2>
+      <Header />
+      <h2 style={{ marginTop: '20px' }}>나의 채팅방 목록</h2>
       
       {/* 방 만들기 영역 */}
       <div style={{ marginBottom: '20px' }}>
