@@ -19,9 +19,9 @@ const ChatRoomList = () => {
     try {
       const res = await api.get('/chat/rooms');
       setMyRooms(res.data);
+      console.log(res.data);
     } catch (error: any) {
       console.error('방 목록 로드 실패:', error);
-
     }
   };
 
@@ -39,9 +39,9 @@ const ChatRoomList = () => {
   };
 
   // 방 입장 함수
-  const handleJoinRoom = async (roomId: string) => {
+  const handleJoinRoom = async (roomId: string, title: string) => {
     try {
-      navigate(`/chat/rooms/${roomId}`);
+      navigate(`/chat/rooms/${roomId}`, {state: { title }});
     } catch (error) {
       console.error('방 입장 실패: ', error);
       alert('방 입장 실패');
@@ -79,7 +79,7 @@ const ChatRoomList = () => {
               <strong>{room.title}</strong> 
               <button
                 style={{ marginLeft: '10px' }}
-                onClick={() => handleJoinRoom(room.id)}
+                onClick={() => handleJoinRoom(room.id, room.title)}
                 >
                   입장하기</button>
             </li>

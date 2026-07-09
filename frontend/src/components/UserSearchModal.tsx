@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
 interface UserSearchModalProps {
@@ -12,7 +13,7 @@ export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchM
   
     const [email, setEmail] = useState('');
     const [searchResult, setSearchResult] = useState<any>(null);
-    const [userDetail, setUserDetail] = useState<any>(null);
+    const { currentUser } = useAuth();
 
     // 이메일로 유저 검색
     const handleSearch = async () => {
@@ -20,23 +21,12 @@ export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchM
             const response = await api.get(`users/search?email=${email}`);
             if (response.data.success) {
                 setSearchResult(response.data.user);
-                setUserDetail(null);
             } else {
                 alert(response.data.message);
                 setSearchResult(null);
             }
         } catch(error) {
             console.error('유저 검색 실패: ', error);
-        }
-    }
-
-    // 유저 id로 조회
-    const handleFetchDetail = async (userId: number) => {
-        try {
-            const response = await api.get(`users/${userId}`);
-            setUserDetail(response.data);
-        } catch (error) {
-            console.error('특정 유저 조회 실패: ', error);
         }
     }
 
@@ -54,6 +44,7 @@ export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchM
               placeholder="이메일로 검색"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               style={styles.input}
             />
             <button onClick={handleSearch} style={styles.searchBtn}>검색</button>
@@ -65,12 +56,15 @@ export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchM
                 <p style={styles.nickname}>{searchResult.nickname}</p>
                 <p style={styles.email}>{searchResult.email}</p>
               </div>
-              <button
+              {searchResult.id !== currentUser?.id && (
+                <button
                 onClick={() => onInviteSubmit([searchResult.id])}
                 style={styles.inviteBtn}
-              >
-                초대하기
-              </button>
+                >
+                  초대하기
+                </button>
+              )}
+              
             </div>
           )}
         </div>

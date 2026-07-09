@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import api from '../api/axios';
 import { UserSearchModal } from '../components/UserSearchModal';
@@ -17,6 +17,8 @@ const ChatRoomPage = () => {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const navigate = useNavigate();
     const { currentUser, isLoading } = useAuth();
+    const location = useLocation();
+    const roomTitle = location.state?.title ?? `채팅방 ${roomId}`
 
     // 맨 아래 지점을 가리킬 Ref
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -125,9 +127,7 @@ const ChatRoomPage = () => {
     if (isLoading) return null;
 
     // 메시지 보내기
-    const handleSendMessage = (e: React.FormEvent) => {
-        e.preventDefault();
-
+    const handleSendMessage = () => {
         if (!inputText.trim() || !socket) return;
 
         try {
@@ -159,7 +159,11 @@ const ChatRoomPage = () => {
 
     // 초대하기
     const handleInviteSubmit = async (userIds: number[]) => {
-      await api.post(`chat/rooms/${roomId}/invite`, { invitedUserIds: userIds });
+      try {
+        await api.post(`chat/rooms/${roomId}/invite`, { invitedUserIds: userIds });
+      } catch (error: any) {
+        alert(error.response?.data?.message ?? '초대에 실패했습니다.');
+      }
     };
 
     // 방에서 나가기
@@ -177,11 +181,13 @@ const ChatRoomPage = () => {
         <button onClick={() => navigate('/chat/rooms')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
           ← 뒤로
         </button>
-        <h2 style={{ margin: 0, fontSize: '16px' }}>채팅방 {roomId}</h2>
+        <h2 style={{ margin: 0, fontSize: '16px' }}>{roomTitle}</h2>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={() => setIsInviteModalOpen(true)}
-            style={styles.inviteBtn}  
-          >초대</button>
+          <button
+            onClick={() => setIsInviteModalOpen(true)}
+            style={styles.inviteBtn}>
+            초대
+          </button>
           <UserSearchModal
             onInviteSubmit={handleInviteSubmit}
             isOpen={isInviteModalOpen}
@@ -225,6 +231,7 @@ const ChatRoomPage = () => {
         <input
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
           placeholder="메시지를 입력해 주세요."
           style={styles.typingBox}
         />

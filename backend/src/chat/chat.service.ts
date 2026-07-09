@@ -165,6 +165,10 @@ export class ChatService {
 
       if (!membership) throw new NotFoundException('방에 참여하고 있는 사람만이 초대를 할 수 있습니다.');
 
+      if (invitedUserIds.includes(requesterId)) {
+        throw new BadRequestException('자기 자신은 초대할 수 없습니다.');
+      }
+
       // 해당 방의 멤버인 유저 한번에 조회
       const existingMembers = await queryRunner.manager.find(ChatRoomMember, {
         where: { room_id: roomId, user_id: In(invitedUserIds) },
