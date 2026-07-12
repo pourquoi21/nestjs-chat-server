@@ -16,7 +16,7 @@ const ChatRoomPage = () => {
     const [socket, setSocket] = useState<Socket | null>(null);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const navigate = useNavigate();
-    const { currentUser, isLoading } = useAuth();
+    const { setCurrentUser, currentUser, isLoading } = useAuth();
     const location = useLocation();
     const roomTitle = location.state?.title ?? `채팅방 ${roomId}`
 
@@ -173,6 +173,16 @@ const ChatRoomPage = () => {
       navigate('/chat/rooms');
     };
 
+    // 로그아웃
+    const handleLogout = () => {
+        const confirmLogout = confirm('로그아웃하시겠습니까?');
+        if (confirmLogout) {
+          localStorage.removeItem('accessToken');
+          setCurrentUser(null);
+          navigate('/login');
+        }
+    }
+
     return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '0' }}>
   
@@ -181,8 +191,8 @@ const ChatRoomPage = () => {
         <button onClick={() => navigate('/chat/rooms')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
           ← 뒤로
         </button>
-        <h2 style={{ margin: 0, fontSize: '16px' }}>{roomTitle}</h2>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <h2 style={styles.roomTitle}>{roomTitle}</h2>
+        <div style={styles.buttons}>
           <button
             onClick={() => setIsInviteModalOpen(true)}
             style={styles.inviteBtn}>
@@ -196,6 +206,11 @@ const ChatRoomPage = () => {
           <button onClick={handleLeaveRoom}
             style={styles.leaveBtn}>
             나가기
+          </button>
+          <button
+            style={styles.logoutBtn}
+            onClick={handleLogout}>
+            로그아웃    
           </button>
         </div>
       </div>
@@ -247,26 +262,36 @@ const ChatRoomPage = () => {
 };
 
 const styles = {
-  sendBtn: { marginLeft: '8px', padding: '8px 16px',
-    backgroundColor: '#4CAF50', color: 'white', border: 'none',
-    borderRadius: '20px', cursor: 'pointer'
+  header: { 
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+    padding: '12px 20px', borderBottom: '1px solid #ddd', backgroundColor: '#fff'
+  },
+  roomTitle: { margin: 0, fontSize: '16px', fontWeight: 600 as const },
+  buttons: { display: 'flex', gap: '8px', alignItems: 'center' },
+  inviteBtn: {
+    padding: '6px 14px', backgroundColor: '#999',
+    color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '14px'
+  },
+  leaveBtn: {
+    padding: '6px 14px', backgroundColor: '#e53e3e',
+    color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', fontSize: '14px'
+  },
+  logoutBtn: {
+    background: 'none', border: 'none', cursor: 'pointer',
+    color: '#e53e3e', fontSize: '14px',
+  },
+  msgBox: { 
+    display: 'flex', padding: '12px 20px', borderTop: '1px solid #ddd', backgroundColor: '#fff'
   },
   typingBox: {
     flex: 1, padding: '8px 12px', border: '1px solid #ddd',
     borderRadius: '20px', outline: 'none'
   },
-  msgBox: { 
-    display: 'flex', padding: '12px 20px', borderTop: '1px solid #ddd', backgroundColor: '#fff'
+  sendBtn: {
+    marginLeft: '8px', padding: '8px 16px',
+    backgroundColor: '#4CAF50', color: 'white', border: 'none',
+    borderRadius: '20px', cursor: 'pointer', fontSize: '14px'
   },
-  header: { 
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '12px 20px', borderBottom: '1px solid #ddd', backgroundColor: '#fff'
-  },
-  leaveBtn: { padding: '8px 16px', backgroundColor: '#e53e3e',
-    color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer'
-  },
-  inviteBtn: {padding: '8px 16px', backgroundColor: '#999',
-    color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer'}
 }
 
 export default ChatRoomPage;

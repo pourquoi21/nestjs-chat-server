@@ -53,7 +53,7 @@ const ChatRoomList = () => {
   }, []);
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <Header />
       <h2 style={{ marginTop: '20px' }}>나의 채팅방 목록</h2>
       

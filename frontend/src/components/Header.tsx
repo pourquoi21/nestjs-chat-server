@@ -6,9 +6,12 @@ export const Header = () => {
     const { setCurrentUser } = useAuth();
 
     const handleLogout = () => {
-        localStorage.removeItem('accessToken');
-        setCurrentUser(null);
-        navigate('/login');
+        const confirmLogout = confirm('로그아웃하시겠습니까?');
+        if (confirmLogout) {
+          localStorage.removeItem('accessToken');
+          setCurrentUser(null);
+          navigate('/login');
+        }
     }
 
     return (
