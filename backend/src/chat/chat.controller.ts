@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Patch,
   Param,
   ParseIntPipe,
   Post,
@@ -133,5 +134,21 @@ export class ChatController {
     //   content: `${user}`
     // })
    return { message: '퇴장 완료' };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('rooms/:roomId/read')
+  @ApiOperation({
+    summary: '채팅 읽기',
+    description: '채팅을 읽어 마지막으로 읽은 메시지를 업데이트합니다.',
+  })
+  @ApiCreatedResponse({
+    description: '채팅 읽기',
+  })
+  async readMessages(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Req() req: { user: ActiveUser },
+  ) {
+    return await this.chatService.readMessages(roomId, req.user.sub);
   }
 }

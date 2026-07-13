@@ -10,6 +10,11 @@ import { ActiveUser } from '../auth/interfaces/active-user.interface';
 import { InviteMembersDto } from './dto/invite-members.dto';
 import { MessageType } from './entities/chat-message.entity';
 import { getSystemErrorMap } from 'util';
+import { ReturningResultsEntityUpdator } from 'typeorm/query-builder/ReturningResultsEntityUpdator.js';
+
+export type ChatRoomWithReadStatus = ChatRoom & {
+  last_read_message_id: number;
+};
 
 @Injectable()
 export class ChatService {
@@ -49,6 +54,7 @@ export class ChatService {
       await queryRunner.manager.update(ChatRoom, room_id, {
         last_message: content,
         last_message_at: savedMessage.created_at,
+        last_message_id: savedMessage.id,
       });
 
       await queryRunner.commitTransaction();
@@ -63,14 +69,21 @@ export class ChatService {
   }
 
   // 유저가 속한 방을 불러오기
-  async getMyRooms(userId: number): Promise<ChatRoom[]> {
+  async getMyRooms(userId: number): Promise<ChatRoomWithReadStatus[]> {
     const memberships = await this.chatRoomMemberRepository.find({
       where: { user_id: userId },
       relations: ['room'],
       order: { joined_at: 'DESC' },
     });
 
-    return memberships.map((membership) => membership.room);
+    return memberships.map((membership) => {
+      const room = membership.room;
+      
+      return {
+        ...room,
+        last_read_message_id: membership.last_read_message_id,
+    } as ChatRoomWithReadStatus;
+    });
   }
 
   // 과거 메시지 불러오기 (최신순 50개)
@@ -274,5 +287,19 @@ export class ChatService {
     } finally {
       await queryRunner.release();
     }    
+  }
+
+  async readMessages(roomId: number, userId: number) {
+    const lastMessage = await this.chatRepository.findOne({
+      where: { room_id: roomId },
+      order: { id: 'DESC' },
+    });
+
+    if (!lastMessage) return;
+
+    await this.chatRoomMemberRepository.update(
+      { room_id: roomId, user_id: userId },
+      { last_read_message_id: lastMessage.id },
+    );
   }
 }

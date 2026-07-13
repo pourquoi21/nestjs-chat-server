@@ -166,7 +166,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const user = client.data?.user;
       const userNickname = client.data.user?.nickname;
 
-      console.log('user data: ', client.data.user);
+      // console.log('user data: ', client.data.user);
 
       if (!user || !room) {
         console.error('error: no data');

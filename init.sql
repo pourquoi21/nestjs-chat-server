@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS chat_rooms (
     type VARCHAR(10) DEFAULT 'GROUP' COMMENT 'INDIVIDUAL(1:1) 또는 GROUP',
     last_message TEXT COMMENT '채팅방 목록 미리보기용 (역정규화)',
     last_message_at TIMESTAMP NULL COMMENT '정렬을 위한 마지막 메시지 시간',
+    last_message_id INT DEFAULT 0 COMMENT '안 읽은 메시지 계산용',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
