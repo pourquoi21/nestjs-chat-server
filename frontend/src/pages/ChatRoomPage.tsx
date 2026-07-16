@@ -31,11 +31,30 @@ const ChatRoomPage = () => {
     // 기존의 메시지 로드
     const fetchMessages = async () => {
         try {
-            const response = await api.get(`chat/rooms/${roomId}/messages`);
-            setMessages(response.data);
+          const response = await api.get(`chat/rooms/${roomId}/messages`);
+          setMessages(response.data);
         } catch (error) {
-            console.error('메시지 로드 실패:', error);
+          console.error('메시지 로드 실패:', error);
         }
+    };
+
+    // 메시지 읽기
+    const readMessages = async () => {
+      try {
+        await api.patch(`chat/rooms/${roomId}/read`);
+      } catch (error) {
+        console.error('메시지 읽기 실패:', error);
+      }
+    };
+    
+    // 디바운스 코드
+    const readTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const debouncedReadMessages = () => {
+      if (readTimeoutRef.current) clearTimeout(readTimeoutRef.current);
+      readTimeoutRef.current = setTimeout(() => {
+        readMessages();
+      }, 500);
     };
 
     useEffect(() => {
@@ -43,7 +62,7 @@ const ChatRoomPage = () => {
     }, [messages]);
 
     useEffect(() => {
-        fetchMessages();
+        Promise.all([fetchMessages(), readMessages()]);
 
         const token = localStorage.getItem('accessToken');
         const socketUrl = `http://${window.location.hostname}:4000/chat`;
@@ -101,6 +120,7 @@ const ChatRoomPage = () => {
           setMessages((prev) => 
             [...prev, formattedMessage]
           );
+          debouncedReadMessages();
         });
 
         // 시스템 메시지 수신
@@ -119,6 +139,10 @@ const ChatRoomPage = () => {
         // 컴포넌트 종료시 cleanup
         return () => {
           console.log('socket end');
+          
+          if (readTimeoutRef.current) clearTimeout(readTimeoutRef.current);
+
+          readMessages();
           // newSocket.emit('leave_room', parseInt(roomId!));
           newSocket.disconnect();
         }
