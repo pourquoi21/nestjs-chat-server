@@ -1,7 +1,6 @@
-// frontend/src/components/ChatRoomList.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios';
+import api from '../api/axios';
 
 interface ActiveUser {
   id: number;
@@ -13,7 +12,7 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<ActiveUser | null>(null);
   
-  // 1. 방 목록 가져오는 함수
+  // 방 목록 가져오는 함수
   const fetchUser = async () => {
     try {
       const response = await api.get('/users/me');

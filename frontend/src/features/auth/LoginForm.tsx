@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../../api/axios'; // 아까 만든 axios 인스턴스
 
 interface Props {
   onLogin: (email: string, password: any) => void;

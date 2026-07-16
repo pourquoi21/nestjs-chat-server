@@ -289,6 +289,7 @@ export class ChatService {
     }    
   }
 
+  // 메시지 읽음
   async readMessages(roomId: number, userId: number) {
     const lastMessage = await this.chatRepository.findOne({
       where: { room_id: roomId },

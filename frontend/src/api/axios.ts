@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 
 let isAlertActive = false;
 
@@ -32,7 +32,7 @@ api.interceptors.response.use(
                 }
 
                 isAlertActive = true;
-                alert('세션이 만료되었습니다. 다시 로그인해 주세요.');
+                // alert('세션이 만료되었습니다. 다시 로그인해 주세요.');
 
                 localStorage.removeItem('accessToken');
                 window.location.href = '/login';

@@ -1,5 +1,3 @@
-import {useState} from 'react';
-import api from '../api/axios';
 import type { MessageType } from '../types/message';
 
 interface MessageTypeProps {
