@@ -26,13 +26,13 @@ export const Header = () => {
     )
 }
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   header: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     padding: '12px 20px', borderBottom: '1px solid #ddd', backgroundColor: '#fff'
   },
   title: {
-    fontWeight: 600 as const,
+    fontWeight: 600,
     fontSize: '16px',
   },
   logoutBtn: {

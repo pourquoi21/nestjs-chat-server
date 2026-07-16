@@ -285,12 +285,12 @@ const ChatRoomPage = () => {
   );
 };
 
-const styles = {
+const styles: Record<string, React.CSSProperties> = {
   header: { 
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     padding: '12px 20px', borderBottom: '1px solid #ddd', backgroundColor: '#fff'
   },
-  roomTitle: { margin: 0, fontSize: '16px', fontWeight: 600 as const },
+  roomTitle: { margin: 0, fontSize: '16px', fontWeight: 600 },
   buttons: { display: 'flex', gap: '8px', alignItems: 'center' },
   inviteBtn: {
     padding: '6px 14px', backgroundColor: '#999',

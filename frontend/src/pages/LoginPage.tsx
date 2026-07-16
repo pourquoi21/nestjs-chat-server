@@ -31,12 +31,16 @@ const LoginPage = () => {
     };
 
     return (
-        <div style={{ padding: '50px', textAlign: 'center' }}>
-            <h1>Grid Talk</h1>
-            {/* LoginForm 부품을 가져다 쓰고, 결과 처리는 여기서! */}
+        <div style={styles.page}>
+            <h1 style={styles.brand}>Grid Talk</h1>
             <LoginForm onLogin={handleLoginSubmit} />
         </div>
     );
+};
+
+const styles: Record<string, React.CSSProperties> = {
+  page: { maxWidth: '360px', margin: '0 auto', padding: '3rem 1rem', textAlign: 'center' },
+  brand: { fontSize: '22px', fontWeight: 500, color: '#1A1A1A', margin: '0 0 2.5rem' },
 };
 
 export default LoginPage;

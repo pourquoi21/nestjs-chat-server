@@ -34,13 +34,19 @@ export const MessageItem = ({ msg, currentUserId }: MessageTypeProps) => {
     );
 }
 
-const styles = {
+const styles: {
+  messageRow: (isMyMessage: boolean) => React.CSSProperties;
+  bubble: (isMyMessage: boolean) => React.CSSProperties;
+  nickname: React.CSSProperties;
+  time: React.CSSProperties;
+  systemMessage: React.CSSProperties;
+  } = {
   messageRow: (isMyMessage: boolean) => ({
     display: 'flex',
     flexDirection: isMyMessage ? 'row-reverse' : 'row',
     alignItems: 'flex-end',
     margin: '4px 0',
-  } as React.CSSProperties),
+  }),
 
   bubble: (isMyMessage: boolean) => ({
     backgroundColor: isMyMessage ? '#4CAF50' : '#f1f1f1',
@@ -49,7 +55,7 @@ const styles = {
     borderRadius: '12px',
     textAlign: isMyMessage ? 'right' : 'left',
     maxWidth: '60%',
-  } as React.CSSProperties),
+  }),
 
   nickname: {
     fontSize: '12px',
@@ -63,7 +69,7 @@ const styles = {
   },
 
   systemMessage: {
-    textAlign: 'center' as const,
+    textAlign: 'center',
     color: '#888',
     margin: '8px 0',
     fontSize: '13px',
