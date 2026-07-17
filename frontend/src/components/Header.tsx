@@ -29,7 +29,8 @@ export const Header = () => {
 const styles: Record<string, React.CSSProperties> = {
   header: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '12px 20px', borderBottom: '1px solid #ddd', backgroundColor: '#fff'
+    minHeight: '57px', padding: '12px 20px', boxSizing: 'border-box',
+    borderBottom: '1px solid #ddd', backgroundColor: '#fff'
   },
   title: {
     fontWeight: 600,
