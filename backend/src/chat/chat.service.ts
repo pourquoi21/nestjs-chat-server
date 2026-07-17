@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, LessThan, Repository } from 'typeorm';
+import { DataSource, In, IsNull, LessThan, MoreThan, Not, Repository } from 'typeorm';
 import { ChatMessage } from './entities/chat-message.entity';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { User } from '../users/entities/user.entity';
@@ -11,9 +11,11 @@ import { InviteMembersDto } from './dto/invite-members.dto';
 import { MessageType } from './entities/chat-message.entity';
 import { getSystemErrorMap } from 'util';
 import { ReturningResultsEntityUpdator } from 'typeorm/query-builder/ReturningResultsEntityUpdator.js';
+import { RelationJoinColumnBuilder } from 'typeorm/metadata-builder/RelationJoinColumnBuilder.js';
+import { identity } from 'rxjs';
 
 export type ChatRoomWithReadStatus = ChatRoom & {
-  last_read_message_id: number;
+  unread_count: number;
 };
 
 @Injectable()
@@ -54,7 +56,7 @@ export class ChatService {
       await queryRunner.manager.update(ChatRoom, room_id, {
         last_message: content,
         last_message_at: savedMessage.created_at,
-        last_message_id: savedMessage.id,
+        // last_message_id: savedMessage.id,
       });
 
       await queryRunner.commitTransaction();
@@ -76,14 +78,25 @@ export class ChatService {
       order: { joined_at: 'DESC' },
     });
 
-    return memberships.map((membership) => {
-      const room = membership.room;
-      
-      return {
-        ...room,
-        last_read_message_id: membership.last_read_message_id,
-    } as ChatRoomWithReadStatus;
-    });
+    const results = await Promise.all(
+      memberships.map(async (membership) => {
+        const room = membership.room;
+
+        const unreadCount = await this.chatRepository.count({
+          where: {
+            room_id: room.id,
+            id: MoreThan(membership.last_read_message_id),
+            sender_id: Not(IsNull()),
+          },
+        });
+
+        return {
+          ...room,
+          unread_count: unreadCount,
+        } as ChatRoomWithReadStatus;
+      })
+    );
+    return results;
   }
 
   // 과거 메시지 불러오기 (최신순 50개)
@@ -123,7 +136,7 @@ export class ChatService {
     return messages.reverse();
   }
 
-  // (누군가를 초대한) 방 만들기
+  // 방 만들기
   async createRoom(user: ActiveUser, createRoomDto: CreateRoomDto) {
     const { title } = createRoomDto;
 
@@ -138,7 +151,7 @@ export class ChatService {
       const savedRoom = await queryRunner.manager.save(ChatRoom, newRoom);
 
     
-      // 멤버: 방장      
+      // 멤버: 방장
       const member = new ChatRoomMember();
       member.room_id = savedRoom.id;
       member.user_id = user.sub;
@@ -159,7 +172,7 @@ export class ChatService {
     }
   }
 
-  // 유저 추가 초대하기
+  // 유저 초대하기
   async inviteMembers(
     roomId: number,
     requesterId: number,
@@ -195,9 +208,8 @@ export class ChatService {
       );
 
       if (newUserIds.length === 0) throw new BadRequestException('초대할 유저가 없습니다.');
-      
-      // const invitedUsersNicknames = invitedUsersEntities.map((e) => e.nickname).join(', ');
-      
+
+      // 초대할 멤버 객체 만들기
       const members = newUserIds.map((userId) => {
         const member = new ChatRoomMember();
         member.room_id = roomId;
@@ -205,9 +217,7 @@ export class ChatService {
         return member;
       });
       
-      // await this.chatRoomMemberRepository.save(members);
       await queryRunner.manager.save(ChatRoomMember, members);
-      // console.log(`[DB 저장됨] ${invitedUsersNicknames}가 방 ${roomId}의 멤버가 됨`);
       
       // 닉네임을 구함
       const invitedUsersEntities = await queryRunner.manager.find(User, {
@@ -218,6 +228,7 @@ export class ChatService {
       const invitedNicknames = 
         invitedUsersEntities.map((u) => u.nickname);
 
+      // 시스템메시지 생성
       const systemMessage = new ChatMessage();
       systemMessage.room_id = roomId;
       systemMessage.sender_id = null;
@@ -225,6 +236,18 @@ export class ChatService {
       systemMessage.type = MessageType.SYSTEM;
 
       await queryRunner.manager.save(ChatMessage, systemMessage);
+
+      // 방의 마지막 메시지 id조회(새로 들어올 멤버에게 저장)
+      const room = await queryRunner.manager.findOneBy(ChatRoom, { id: roomId });
+      // TODO: 이부분 수정해야 함. last_message_id대신 다른 방식으로 초대멤버에게 주어야함.
+      const lastMessageId = room?.last_message_id ?? 0;
+
+      // 초대된 멤버 객체에 마지막 읽은 메시지 업데이트
+      await queryRunner.manager.update(
+        ChatRoomMember,
+        { room_id: roomId, user_id: In(newUserIds)},
+        { last_read_message_id: lastMessageId }
+      );
 
       await queryRunner.commitTransaction();
 

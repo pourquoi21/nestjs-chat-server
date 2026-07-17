@@ -7,8 +7,7 @@ import api from '../../api/axios';
 interface ChatRoom {
   id: string;
   title: string;
-  last_read_message_id: number;
-  last_message_id: number;
+  unread_count: number;
   last_message: string;
 }
 
@@ -82,8 +81,9 @@ const ChatRoomList = () => {
     ) : (
       <ul style={styles.roomList}>
         {myRooms.map((room) => {
-          const unreadCount = room.last_message_id - room.last_read_message_id;
-          
+          // const unreadCount = room.last_message_id - room.last_read_message_id;
+          const unreadCount = room.unread_count;
+
           // 방 타이틀에서 앞 두 글자만 따서 원형아바타로 활용
           const avatarText = room.title ? room.title.slice(0, 2) : '방';
 
