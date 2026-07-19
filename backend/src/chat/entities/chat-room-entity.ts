@@ -19,9 +19,6 @@ export class ChatRoom {
   @Column('text', { nullable: true })
   last_message!: string;
 
-  @Column({ default: 0 })
-  last_message_id!: number;
-
   @Column({ type: 'timestamp', nullable: true })
   last_message_at!: Date;
 

@@ -56,7 +56,6 @@ export class ChatService {
       await queryRunner.manager.update(ChatRoom, room_id, {
         last_message: content,
         last_message_at: savedMessage.created_at,
-        // last_message_id: savedMessage.id,
       });
 
       await queryRunner.commitTransaction();
@@ -239,8 +238,13 @@ export class ChatService {
 
       // 방의 마지막 메시지 id조회(새로 들어올 멤버에게 저장)
       const room = await queryRunner.manager.findOneBy(ChatRoom, { id: roomId });
-      // TODO: 이부분 수정해야 함. last_message_id대신 다른 방식으로 초대멤버에게 주어야함.
-      const lastMessageId = room?.last_message_id ?? 0;
+     
+      const lastMessage = await queryRunner.manager.findOne(ChatMessage, {
+        where: { room_id: roomId },
+        order: { id: 'DESC' },
+      })
+
+      const lastMessageId = lastMessage?.id ?? 0;
 
       // 초대된 멤버 객체에 마지막 읽은 메시지 업데이트
       await queryRunner.manager.update(
