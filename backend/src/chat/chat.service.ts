@@ -13,6 +13,7 @@ import { getSystemErrorMap } from 'util';
 import { ReturningResultsEntityUpdator } from 'typeorm/query-builder/ReturningResultsEntityUpdator.js';
 import { RelationJoinColumnBuilder } from 'typeorm/metadata-builder/RelationJoinColumnBuilder.js';
 import { identity } from 'rxjs';
+import { RoomMemberDto } from './dto/room-member.dto';
 
 export type ChatRoomWithReadStatus = ChatRoom & {
   unread_count: number;
@@ -133,6 +134,16 @@ export class ChatService {
 
     // 프론트에서 읽기 편하게 뒤집어주기
     return messages.reverse();
+  }
+
+  // 참여중인 유저 목록 가져오기
+  async getMembers(roomId: number, cursor?: number): Promise<RoomMemberDto[]> {
+    const members = await this.chatRoomMemberRepository.find({
+      where: {room_id: roomId},
+      relations: ['user'],
+    });
+
+    return members.map((m) => m.user);
   }
 
   // 방 만들기

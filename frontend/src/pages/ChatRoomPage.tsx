@@ -6,6 +6,7 @@ import { UserSearchModal } from '../components/UserSearchModal';
 import { MessageItem } from '../components/MessageItem';
 import { useAuth } from '../context/AuthContext';
 import type { MessageType, ChatMessage, SystemMessage } from '../types/message';
+import type { ActiveUser as member } from '../features/users/UserProfile';
 
 
 const ChatRoomPage = () => {
@@ -19,6 +20,7 @@ const ChatRoomPage = () => {
     const { setCurrentUser, currentUser, isLoading } = useAuth();
     const location = useLocation();
     const roomTitle = location.state?.title ?? `채팅방 ${roomId}`
+    const [members, setMembers] = useState<member[]>([]);
 
     // 맨 아래 지점을 가리킬 Ref
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -37,6 +39,17 @@ const ChatRoomPage = () => {
           console.error('메시지 로드 실패:', error);
         }
     };
+
+    // 참여중인 유저 로드
+    const fetchMembers = async () => {
+      try {
+        const response = await api.get(`chat/rooms/${roomId}/members`);
+        console.log(response.data);
+        setMembers(response.data);
+      } catch (error) {
+        console.error('멤버 로드 실패:', error);
+      }
+    } 
 
     // 메시지 읽기
     const readMessages = async () => {
@@ -62,8 +75,9 @@ const ChatRoomPage = () => {
     }, [messages]);
 
     useEffect(() => {
-        Promise.all([fetchMessages(), readMessages()]);
+        Promise.all([fetchMessages(), readMessages(), fetchMembers()]);
 
+        
         const token = localStorage.getItem('accessToken');
         const socketUrl = `http://${window.location.hostname}:4000/chat`;
         const numericRoomId = roomId ? parseInt(roomId, 10) : null;

@@ -20,6 +20,8 @@ import { ChatRoom } from './entities/chat-room-entity';
 import { InviteMembersDto } from './dto/invite-members.dto';
 import { ChatGateway } from './chat.gateway';
 import { userInfo } from 'os';
+import { ChatRoomMember } from './entities/chat-room-member.entity';
+import { RoomMemberDto } from './dto/room-member.dto';
 
 @ApiTags('채팅 API')
 @Controller('chat')
@@ -102,6 +104,21 @@ export class ChatController {
     @Param('roomId', ParseIntPipe) roomId: number,
   ): Promise<ChatMessage[]> {
     return await this.chatService.getMessages(roomId);
+  }
+
+  @Get('rooms/:roomId/members')
+  @ApiOperation({
+    summary: '채팅방에 참여 중인 유저 목록 조회하기',
+    description: '채팅방 ID를 통해 해당 방의 유저 목록을 가져옵니다.',
+  })
+  @ApiCreatedResponse({
+    description: '참여 중인 멤버 가져오기 성공',
+    type: [RoomMemberDto],
+  })
+  async getRoomUsers(
+    @Param('roomId', ParseIntPipe) roomId: number,
+  ): Promise<RoomMemberDto[]> {
+    return await this.chatService.getMembers(roomId);
   }
 
   @Delete('rooms/:roomId/leave')
