@@ -170,10 +170,13 @@ OFFSET 방식 대신 마지막 메시지 ID를 cursor로 사용하여
 ### 10. Context API를 활용한 전역 유저 상태 관리
 말풍선 좌우 구분 등 여러 컴포넌트에서 현재 유저 정보가 필요하여 AuthContext를 구현하였습니다. 재로그인 시 useEffect가 재실행되지 않는 문제를 로그인 성공 시점에 직접 setCurrentUser를 호출하는 방식으로 해결하였습니다.
 
+### 11. 읽지 않은 메시지 수 뱃지
+처음 기능구현을 도입할 때는 ChatRoom엔티티의 `last_message_id`와 ChatRoomMember엔티티의 `last_read_message_id`의 차이를 구해 읽지 않은 메시지 수를 계산했으나, `last_message_id`가 메시지 테이블 전체에서 증가하는 전역ID이기에 문제가 있었습니다. `WHERE room_id = ? AND id > last_read_message_id`조건으로 실제 메시지 수를 COUNT하는 방식으로 해결하였습니다.
+
 ---
 ## 🚀 Future Improvements
-- 읽지 않은 메시지 수 뱃지
 - 메시지 삭제/수정
 - 채팅방 이름 동적 생성 (카카오톡 방식, 본인 제외 멤버 닉네임)
 - 이미지/파일 전송
 - 메시지 검색
+- 여러 명 동시 초대
