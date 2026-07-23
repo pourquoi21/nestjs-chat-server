@@ -2,7 +2,10 @@ import { IsEmail, IsInt, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RoomMemberDto {
-  @ApiProperty()
+  @ApiProperty({
+  description: 'userId',
+  example: 1,
+  })
   @IsInt()
   id!: number;
 
