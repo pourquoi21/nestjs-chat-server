@@ -1,4 +1,3 @@
-// frontend/src/components/ChatRoomList.tsx
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '../../components/Header';
@@ -21,7 +20,6 @@ const ChatRoomList = () => {
     try {
       const res = await api.get('/chat/rooms');
       setMyRooms(res.data);
-      console.log(res.data);
     } catch (error: any) {
       console.error('방 목록 로드 실패:', error);
     }

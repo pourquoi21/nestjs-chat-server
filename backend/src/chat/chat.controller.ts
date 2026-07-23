@@ -3,25 +3,23 @@ import {
   Controller,
   Delete,
   Get,
-  Patch,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ChatService } from './chat.service';
-import { ChatMessage } from './entities/chat-message.entity';
-import { CreateRoomDto } from './dto/create-room.dto';
-import { ActiveUser } from '../auth/interfaces/active-user.interface';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ChatRoom } from './entities/chat-room-entity';
-import { InviteMembersDto } from './dto/invite-members.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ActiveUser } from '../auth/interfaces/active-user.interface';
 import { ChatGateway } from './chat.gateway';
-import { userInfo } from 'os';
-import { ChatRoomMember } from './entities/chat-room-member.entity';
+import { ChatService } from './chat.service';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { InviteMembersDto } from './dto/invite-members.dto';
 import { RoomMemberDto } from './dto/room-member.dto';
+import { ChatMessage } from './entities/chat-message.entity';
+import { ChatRoom } from './entities/chat-room-entity';
 
 @ApiTags('채팅 API')
 @Controller('chat')

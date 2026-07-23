@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
+import type { ActiveUser as User } from '../features/users/UserProfile';
 
 interface UserSearchModalProps {
   onInviteSubmit: (userIds: number[]) => void;
@@ -14,6 +15,15 @@ export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchM
     const [email, setEmail] = useState('');
     const [searchResult, setSearchResult] = useState<any>(null);
     const { currentUser } = useAuth();
+    const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+
+    // 검색결과에서 유저를 클릭시 selectedUsers에 추가
+    const handleSelectUser = (user: User) => {
+      if (user.id === currentUser!.id) return;
+      if (selectedUsers.some((u) => u.id === user.id)) return;
+      setSelectedUsers((prev) => [ ...prev, user ]);
+      console.log(selectedUsers);
+    };
 
     // 이메일로 유저 검색
     const handleSearch = async () => {
@@ -51,19 +61,23 @@ export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchM
           </div>
 
           {searchResult && (
+            
             <div style={styles.userCard}>
-              <div style={styles.userInfo}>
+              <div
+                onClick={() => handleSelectUser(searchResult)}
+                style={styles.userInfo}>
                 <p style={styles.nickname}>{searchResult.nickname}</p>
                 <p style={styles.email}>{searchResult.email}</p>
               </div>
-              {searchResult.id !== currentUser?.id && (
+              {/* {searchResult.id !== currentUser?.id && (
                 <button
                 onClick={() => onInviteSubmit([searchResult.id])}
                 style={styles.inviteBtn}
                 >
                   초대하기
                 </button>
-              )}
+              )} */}
+              {}
               
             </div>
           )}

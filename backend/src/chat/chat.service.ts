@@ -1,19 +1,14 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, IsNull, LessThan, MoreThan, Not, Repository } from 'typeorm';
-import { ChatMessage } from './entities/chat-message.entity';
-import { CreateRoomDto } from './dto/create-room.dto';
+import { ActiveUser } from '../auth/interfaces/active-user.interface';
 import { User } from '../users/entities/user.entity';
+import { CreateRoomDto } from './dto/create-room.dto';
+import { InviteMembersDto } from './dto/invite-members.dto';
+import { RoomMemberDto } from './dto/room-member.dto';
+import { ChatMessage, MessageType } from './entities/chat-message.entity';
 import { ChatRoom } from './entities/chat-room-entity';
 import { ChatRoomMember } from './entities/chat-room-member.entity';
-import { ActiveUser } from '../auth/interfaces/active-user.interface';
-import { InviteMembersDto } from './dto/invite-members.dto';
-import { MessageType } from './entities/chat-message.entity';
-import { getSystemErrorMap } from 'util';
-import { ReturningResultsEntityUpdator } from 'typeorm/query-builder/ReturningResultsEntityUpdator.js';
-import { RelationJoinColumnBuilder } from 'typeorm/metadata-builder/RelationJoinColumnBuilder.js';
-import { identity } from 'rxjs';
-import { RoomMemberDto } from './dto/room-member.dto';
 
 export type ChatRoomWithReadStatus = ChatRoom & {
   unread_count: number;
