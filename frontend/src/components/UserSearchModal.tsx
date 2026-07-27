@@ -69,14 +69,14 @@ export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchM
                 <p style={styles.nickname}>{searchResult.nickname}</p>
                 <p style={styles.email}>{searchResult.email}</p>
               </div>
-              {/* {searchResult.id !== currentUser?.id && (
+              {searchResult.id !== currentUser?.id && (
                 <button
                 onClick={() => onInviteSubmit([searchResult.id])}
                 style={styles.inviteBtn}
                 >
                   초대하기
                 </button>
-              )} */}
+              )}
               {}
               
             </div>
