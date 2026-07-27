@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, In, IsNull, LessThan, MoreThan, Not, Repository } from 'typeorm';
+import { DataSource, In, IsNull, LessThan, MoreThan, And, Not, Repository } from 'typeorm';
 import { ActiveUser } from '../auth/interfaces/active-user.interface';
 import { User } from '../users/entities/user.entity';
 import { CreateRoomDto } from './dto/create-room.dto';
@@ -95,16 +95,27 @@ export class ChatService {
   }
 
   // 과거 메시지 불러오기 (최신순 50개)
-  async getMessages(roomId: number, cursor?: number): Promise<ChatMessage[]> {
+  async getMessages(
+    roomId: number,
+    userId: number,
+    cursor?: number,
+  ): Promise<ChatMessage[]> {
     const take = 50; // 한번에 가져올 개수
+
+    const membership = await this.chatRoomMemberRepository.findOne({
+      where: { room_id: roomId, user_id: userId },
+    })
+
+    const minVisibleMessageId = membership?.min_visible_message_id ?? 0;
 
     const whereCondition: any = {
       room_id: roomId,
+      id: MoreThan(minVisibleMessageId),
     };
 
     if (cursor) {
       // cursor: 마지막으로 본 메시지 ID
-      whereCondition.id = LessThan(cursor);
+      whereCondition.id = And(MoreThan(minVisibleMessageId), LessThan(cursor));
     }
 
     const messages = await this.chatRepository.find({
@@ -256,7 +267,8 @@ export class ChatService {
       await queryRunner.manager.update(
         ChatRoomMember,
         { room_id: roomId, user_id: In(newUserIds)},
-        { last_read_message_id: lastMessageId }
+        { last_read_message_id: lastMessageId,
+          min_visible_message_id: lastMessageId }
       );
 
       await queryRunner.commitTransaction();

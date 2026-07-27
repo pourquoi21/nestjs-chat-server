@@ -23,6 +23,9 @@ export class ChatRoomMember {
   @Column({ default: 0 })
   last_read_message_id!: number;
 
+  @Column({ default: 0 })
+  min_visible_message_id!: number;
+
   @CreateDateColumn()
   joined_at!: Date;
 

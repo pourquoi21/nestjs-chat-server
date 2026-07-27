@@ -9,6 +9,7 @@ import {
   Post,
   Req,
   UseGuards,
+  Query
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -20,6 +21,7 @@ import { InviteMembersDto } from './dto/invite-members.dto';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { ChatMessage } from './entities/chat-message.entity';
 import { ChatRoom } from './entities/chat-room-entity';
+import { userInfo } from 'os';
 
 @ApiTags('채팅 API')
 @Controller('chat')
@@ -90,6 +92,7 @@ export class ChatController {
   }
 
   @Get('rooms/:roomId/messages')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '채팅방 메시지 가져오기',
     description: '채팅방 ID를 통해 해당 방의 메시지를 가져옵니다.',
@@ -100,8 +103,10 @@ export class ChatController {
   })
   async getRoomMessages(
     @Param('roomId', ParseIntPipe) roomId: number,
+    @Req() req: { user: ActiveUser },
+    @Query('cursor') cursor?: number,
   ): Promise<ChatMessage[]> {
-    return await this.chatService.getMessages(roomId);
+    return await this.chatService.getMessages(roomId, req.user.sub, cursor);
   }
 
   @Get('rooms/:roomId/members')
