@@ -184,7 +184,6 @@ const ChatRoomPage = () => {
           socket.emit('message', {
             room: parseInt(roomId!),
             msg: inputText,
-            // temporaryId: Date.now(),
           });
           console.log('sent message: ' + inputText);
       
@@ -222,11 +221,12 @@ const ChatRoomPage = () => {
     }
 
     return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: '0' }}>
+    <div style={styles.container}>
   
       {/* 헤더 */}
       <div style={styles.header}>
-        <button onClick={() => navigate('/chat/rooms')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}>
+        <button onClick={() => navigate('/chat/rooms')}
+          style={styles.backBtn}>
           ← 뒤로
         </button>
         <h2 style={styles.roomTitle}>{roomTitle}</h2>
@@ -239,7 +239,8 @@ const ChatRoomPage = () => {
           <UserSearchModal
             onInviteSubmit={handleInviteSubmit}
             isOpen={isInviteModalOpen}
-            onClose={() => setIsInviteModalOpen(false)}  
+            onClose={() => setIsInviteModalOpen(false)}
+            existingMembers={members}
           />
           <button onClick={handleLeaveRoom}
             style={styles.leaveBtn}>
@@ -254,7 +255,7 @@ const ChatRoomPage = () => {
       </div>
 
       {/* 메시지 영역 */}
-      <div style={{ flex: 1, overflowY: 'scroll', padding: '16px' }}>
+      <div style={styles.messageListArea}>
         {messages.map((msg, index) => {
           const currentDate = 'created_at' in msg
             ? new Date(msg.created_at).toLocaleDateString('ko-KR')
@@ -268,7 +269,7 @@ const ChatRoomPage = () => {
           return (
             <div key={msg.id}>
               {showDateDivider && (
-                 <div style={{ textAlign: 'center', color: '#888', margin: '12px 0', fontSize: '12px' }}>
+                 <div style={styles.dateDivider}>
                   ── {currentDate} ──
                 </div>
               )}
@@ -300,11 +301,13 @@ const ChatRoomPage = () => {
 };
 
 const styles: Record<string, React.CSSProperties> = {
+  container: { display: 'flex', flexDirection: 'column', height: '100vh', padding: '0' },
   header: { 
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     padding: '12px 20px', borderBottom: '1px solid #ddd', backgroundColor: '#fff'
   },
   roomTitle: { margin: 0, fontSize: '16px', fontWeight: 600 },
+  backBtn: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' },
   buttons: { display: 'flex', gap: '8px', alignItems: 'center' },
   inviteBtn: {
     padding: '6px 14px', backgroundColor: '#999',
@@ -318,6 +321,8 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'none', border: 'none', cursor: 'pointer',
     color: '#e53e3e', fontSize: '14px',
   },
+  messageListArea: { flex: 1, overflowY: 'scroll', padding: '16px' },
+  dateDivider: { textAlign: 'center', color: '#888', margin: '12px 0', fontSize: '12px' },
   msgBox: { 
     display: 'flex', padding: '12px 20px', borderTop: '1px solid #ddd', backgroundColor: '#fff'
   },

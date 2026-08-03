@@ -3,13 +3,20 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import type { ActiveUser as User } from '../features/users/UserProfile';
 
+export interface RoomMember {
+  id: number;
+  email: string;
+  nickname: string;
+}
+
 interface UserSearchModalProps {
   onInviteSubmit: (userIds: number[]) => void;
   isOpen: boolean;
   onClose: () => void;
+  existingMembers: RoomMember[];
 }
 
-export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchModalProps) => {
+export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose, existingMembers }: UserSearchModalProps) => {
     if (!isOpen) return null;
   
     const [email, setEmail] = useState('');
