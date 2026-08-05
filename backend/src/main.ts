@@ -10,10 +10,13 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const isProduction = process.env.NODE_ENV === 'production';
+  const frontendUrl = process.env.FRONTEND_URL;
+
   // CORS 설정
   // NOTE: chatGateway에 한 것은 socket에 설정한것
   app.enableCors({
-    origin: true,
+    origin: isProduction && frontendUrl ? frontendUrl : true,
     credentials: true,
   });
   app.use(express.json());
