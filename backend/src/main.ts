@@ -11,14 +11,18 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const isProduction = process.env.NODE_ENV === 'production';
-  const frontendUrl = process.env.FRONTEND_URL;
+  const frontendUrl = process.env.FRONTEND_URL || `https://nestjs-chat-server-ecru.vercel.app`;
 
-  // CORS 설정
-  // NOTE: chatGateway에 한 것은 socket에 설정한것
   app.enableCors({
-    origin: isProduction && frontendUrl ? frontendUrl : true,
-    credentials: true,
-  });
+  origin: [
+    frontendUrl,
+    'http://localhost:5173', // 로컬 개발용
+    'http://localhost:4000',
+  ],
+  credentials: true,
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type, Accept, Authorization',
+});
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
