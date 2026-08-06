@@ -16,7 +16,7 @@ interface UserSearchModalProps {
   existingMembers: RoomMember[];
 }
 
-export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose, existingMembers }: UserSearchModalProps) => {
+export const UserSearchModal = ({ onInviteSubmit, isOpen, onClose }: UserSearchModalProps) => {
     if (!isOpen) return null;
   
     const [email, setEmail] = useState('');
