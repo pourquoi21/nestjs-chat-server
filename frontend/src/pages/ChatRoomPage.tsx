@@ -79,7 +79,8 @@ const ChatRoomPage = () => {
 
         
         const token = localStorage.getItem('accessToken');
-        const socketUrl = `http://${window.location.hostname}:4000/chat`;
+        const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000`;
+        const socketUrl = `${backendUrl}/chat`;
         const numericRoomId = roomId ? parseInt(roomId, 10) : null;
         
         // socket.io연결
