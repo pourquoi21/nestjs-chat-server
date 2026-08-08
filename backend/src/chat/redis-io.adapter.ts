@@ -10,11 +10,13 @@ export class RedisIoAdapter extends IoAdapter {
   private readonly logger = new Logger('RedisIoAdapter');
 
   async connectToRedis(): Promise<void> {
-    this.logger.log('[Redis] 서버 연결 시도 중... (url: redis://localhost:6379)');
+    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+
+    this.logger.log(`[Redis] 서버 연결 시도 중... (url: ${redisUrl})`);
 
     // Pub(방송하는 사람)과 Sub(듣는 사람) 클라이언트를 각각 만듦
     const pubClient = createClient({
-      url: 'redis://localhost:6379',
+      url: 'redisUrl',
     });
     const subClient = pubClient.duplicate();
 
