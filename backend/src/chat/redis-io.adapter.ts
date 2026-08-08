@@ -16,7 +16,7 @@ export class RedisIoAdapter extends IoAdapter {
 
     // Pub(방송하는 사람)과 Sub(듣는 사람) 클라이언트를 각각 만듦
     const pubClient = createClient({
-      url: 'redisUrl',
+      url: redisUrl,
     });
     const subClient = pubClient.duplicate();
 
