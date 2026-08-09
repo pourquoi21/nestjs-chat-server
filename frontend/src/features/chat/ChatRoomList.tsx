@@ -13,16 +13,19 @@ interface ChatRoom {
 const ChatRoomList = () => {
   const [myRooms, setMyRooms] = useState<ChatRoom[]>([]);
   const [newRoomName, setNewRoomName] = useState('');
+  const [ isLoading, setIsLoading ] = useState(true);
   const navigate = useNavigate();
 
   // 방 목록 가져오는 함수
   const fetchAllRooms = async () => {
+    setIsLoading(true);
     try {
       const res = await api.get('/chat/rooms');
       setMyRooms(res.data);
     } catch (error: any) {
       console.error('방 목록 로드 실패:', error);
     }
+    setIsLoading(false);
   };
 
   // 새 방 만드는 함수
@@ -74,9 +77,11 @@ const ChatRoomList = () => {
       <hr />
 
       {/* 참여중인 방 목록 출력 영역 */}
-      {myRooms.length === 0 ? (
+      {isLoading ? (
+        <p style={styles.emptyText}>로딩 중...</p>
+      ) : myRooms.length === 0 ? (
       <p style={styles.emptyText}>참여 중인 방이 없습니다. 새로운 방을 만들어보세요.</p>
-    ) : (
+      ) : (
       <ul style={styles.roomList}>
         {myRooms.map((room) => {
           // const unreadCount = room.last_message_id - room.last_read_message_id;

@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-let isAlertActive = false;
-
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const api = axios.create({
@@ -26,19 +24,17 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
+        const isLoginRequest = error.config?.url?.includes('/login');
+
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 401) {
-                // 이미 얼럿이 떴는지 확인
-                if (isAlertActive) {
+                if (isLoginRequest) {
                     return Promise.reject(error);
                 }
 
-                isAlertActive = true;
-                // alert('세션이 만료되었습니다. 다시 로그인해 주세요.');
-
                 localStorage.removeItem('accessToken');
+                
                 window.location.href = '/login';
-
                 return new Promise(() => {});
             }
         }

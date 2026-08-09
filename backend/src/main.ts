@@ -10,7 +10,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  const isProduction = process.env.NODE_ENV === 'production';
+  // const isProduction = process.env.NODE_ENV === 'production';
   const frontendUrl = process.env.FRONTEND_URL || `https://nestjs-chat-server-ecru.vercel.app`;
 
   app.enableCors({

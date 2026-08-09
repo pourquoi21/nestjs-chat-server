@@ -79,7 +79,7 @@ const ChatRoomPage = () => {
 
         
         const token = localStorage.getItem('accessToken');
-        const backendUrl = import.meta.env.VITE_API_URL || `https://${window.location.hostname}:4000`;
+        const backendUrl = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:4000`;
         const socketUrl = `${backendUrl}/chat`;
         const numericRoomId = roomId ? parseInt(roomId, 10) : null;
         
@@ -158,7 +158,6 @@ const ChatRoomPage = () => {
           if (readTimeoutRef.current) clearTimeout(readTimeoutRef.current);
 
           readMessages();
-          // newSocket.emit('leave_room', parseInt(roomId!));
           newSocket.disconnect();
         }
     }, [roomId]);
@@ -199,6 +198,7 @@ const ChatRoomPage = () => {
     const handleInviteSubmit = async (userIds: number[]) => {
       try {
         await api.post(`chat/rooms/${roomId}/invite`, { invitedUserIds: userIds });
+        setIsInviteModalOpen(false);
       } catch (error: any) {
         alert(error.response?.data?.message ?? '초대에 실패했습니다.');
       }
