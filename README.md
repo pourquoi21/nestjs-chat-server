@@ -22,7 +22,7 @@ graph TD
         UI["UI 컴포넌트 (ChatRoomPage, Modal)"]
         Axios["Axios (HTTP 클라이언트)"]
         SocketClient["Socket.IO Client"]
-        
+       
         UI --> Axios
         UI --> SocketClient
     end
@@ -35,7 +35,7 @@ graph TD
         Auth["AuthGuard / JwtStrategy (JWT 인증)"]
         Gateway["ChatGateway (소켓 이벤트 수신)"]
         Service["ChatService (비즈니스 로직 / 트랜잭션)"]
-        
+       
         Gateway --> Auth
         Auth --> Service
     end
@@ -69,7 +69,7 @@ graph TD
 ```
 ---
 
-## 🏗 Project Structure
+## 🪾 Project Structure
 
 ```
 root/
@@ -83,8 +83,25 @@ root/
 ```
 
 ---
+## 🌐 Live Demo
+[배포 URL](https://nestjs-chat-server-ecru.vercel.app)
 
-## 🚀 How to Run (실행 방법)
+> 💡 두 개의 브라우저 창(또는 시크릿 창)에서 각각 다른 계정으로 로그인하면 실시간 채팅을 테스트할 수 있습니다.
+
+#### 테스트 계정
+- postman1@test.com / 1234
+- postman2@test.com / 1234
+
+![채팅 주고받기](./docs/images/chatting.gif)
+
+| 채팅방 목록 | 채팅방 화면 |
+|------------|------------|
+| ![방목록](./docs/images/chatlist.png) | ![채팅방](./docs/images/chatpage.png) |
+
+
+---
+
+## ⚙️ How to Run (실행 방법)
 
 ### 사전 준비
 - Node.js v20 이상
@@ -167,11 +184,14 @@ OFFSET 방식 대신 마지막 메시지 ID를 cursor로 사용하여
 ### 9. 초대/퇴장 시스템 메시지 처리
 초대 및 퇴장 이벤트 발생 시 멤버 변경과 시스템 메시지 저장을 QueryRunner로 묶어 트랜잭션으로 처리하였습니다. 재접속 후에도 이력이 유지되며, 현재 접속 중인 사용자에게는 Socket.IO를 통해 실시간으로 알림이 전달됩니다.
 
-### 10. Context API를 활용한 전역 유저 상태 관리
+### 10. 읽지 않은 메시지 수 뱃지
+처음 기능구현을 도입할 때는 ChatRoom엔티티의 `last_message_id`와 ChatRoomMember엔티티의 `last_read_message_id`의 차이를 구해 읽지 않은 메시지 수를 계산했으나, `last_message_id`가 메시지 테이블 전체에서 증가하는 전역ID이기에 문제가 있었습니다. `WHERE room_id = ? AND id > last_read_message_id`조건으로 실제 메시지 수를 COUNT하는 방식으로 해결하였습니다.
+
+### 11. Context API를 활용한 전역 유저 상태 관리
 말풍선 좌우 구분 등 여러 컴포넌트에서 현재 유저 정보가 필요하여 AuthContext를 구현하였습니다. 재로그인 시 useEffect가 재실행되지 않는 문제를 로그인 성공 시점에 직접 setCurrentUser를 호출하는 방식으로 해결하였습니다.
 
-### 11. 읽지 않은 메시지 수 뱃지
-처음 기능구현을 도입할 때는 ChatRoom엔티티의 `last_message_id`와 ChatRoomMember엔티티의 `last_read_message_id`의 차이를 구해 읽지 않은 메시지 수를 계산했으나, `last_message_id`가 메시지 테이블 전체에서 증가하는 전역ID이기에 문제가 있었습니다. `WHERE room_id = ? AND id > last_read_message_id`조건으로 실제 메시지 수를 COUNT하는 방식으로 해결하였습니다.
+### 12. 초대 이전 메시지 접근 제한
+초대받은 멤버가 초대 시점 이전의 대화를 볼 수 없도록 설계하였습니다. ChatRoomMember에 `min_visible_message_id` 필드를 두고, 초대 시점의 최신 메시지 ID를 저장합니다. 메시지 조회 시 `WHERE id > min_visible_message_id` 조건을 적용하여 해당 멤버에게 허용된 메시지만 반환합니다.
 
 ---
 ## 🚀 Future Improvements
@@ -180,4 +200,3 @@ OFFSET 방식 대신 마지막 메시지 ID를 cursor로 사용하여
 - 이미지/파일 전송
 - 메시지 검색
 - 여러 명 동시 초대
-- 초대 이전 메시지 접근 제한 (새 멤버는 초대 시점 이후 메시지만 조회 가능)
