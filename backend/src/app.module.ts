@@ -29,6 +29,9 @@ import { join } from 'path';
         synchronize: false, // NOTE: true로 두면 엔티티/코드를 고치면 서버 켤때 DB테이블도 알아서 고침
         charset: 'utf8mb4_general_ci',
         logging: true,
+        ssl: process.env.NODE_ENV === 'production' ? {
+          rejectUnauthorized: true,
+        } : false,
       }),
     }),
     UsersModule,
